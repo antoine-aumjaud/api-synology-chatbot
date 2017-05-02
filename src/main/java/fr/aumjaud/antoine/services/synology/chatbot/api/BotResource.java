@@ -4,7 +4,7 @@ import spark.Request;
 import spark.Response;
 
 public class BotResource {
-
+ 
     
     public String sayHello(Request request, Response response) {
         return "hello";
