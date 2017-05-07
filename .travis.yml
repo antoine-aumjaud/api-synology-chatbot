@@ -3,11 +3,10 @@ jdk:
 - oraclejdk8
 
 deploy:
-	skip_cleanup: true
-
   provider: releases
   api_key: 
     secure: $GITHUB_SECURE_TOKEN
   file: '$TRAVIS_BUILD_DIR/libs/service-synology-chatbot-*.jar'
+	skip_cleanup: true
   on:
     repo: antoine-aumjaud/api-syno-chatbot
