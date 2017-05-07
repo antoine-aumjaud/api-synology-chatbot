@@ -7,7 +7,7 @@ import static spark.SparkBase.port;
 public class LaunchServer {
 	
     public static void main(String... args) {
-        port(args.length > 0 ? Integer.parseInt(args[0]) : 9080); 
+        port(9080); 
 
         get("/hi", (request, response) -> "hello");
         
