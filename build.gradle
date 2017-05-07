@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 apply plugin: 'application'
 
-mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.api.LaunchServer'
+mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
 
 repositories {
     mavenCentral()
@@ -17,6 +17,6 @@ dependencies {
 }
 
 jar {
-    baseName = 'chatbot-api'
-    version =  '0.0.1'
+    baseName = 'service-synology-chatbot'
+    version =  '0.0.2'
 }

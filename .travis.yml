@@ -1,3 +1,12 @@
 language: java
+
 jdk:
-  - oraclejdk8
+- oraclejdk8
+
+deploy:
+  provider: releases
+  api_key:
+    secure: $GITHUB_SECURE_TOKEN
+  file: '$TRAVIS_BUILD_DIR/libs/service-synology-chatbot-*.jar'
+  on:
+    repo: antoine-aumjaud/api-syno-chatbot

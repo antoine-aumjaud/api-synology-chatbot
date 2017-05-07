@@ -1,4 +1,4 @@
-package fr.aumjaud.antoine.services.synology.chatbot.api;
+package fr.aumjaud.antoine.services.synology.chatbot;
 
 import spark.Request;
 import spark.Response;
