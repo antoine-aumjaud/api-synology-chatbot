@@ -4,6 +4,8 @@ jdk:
 - oraclejdk8
 
 deploy:
+	skip_cleanup: true
+
   provider: releases
   api_key:
     secure: $GITHUB_SECURE_TOKEN
