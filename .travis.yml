@@ -2,11 +2,11 @@ language: java
 jdk:
 - oraclejdk8
 deploy:
+  skip_cleanup: true
   provider: releases
   api_key:
     secure: JXWU7wjIySfptpem+26z9bQFlkJTUGRH/5GhSZDYkgo/v+KY+pi2+/2llVU2/ES/VnGmqEnB/WRkyWzwZpb5+tTNUUnaAiDPqoZGDZfctxK4aKmtStXs/F9Op8RhRDN81zQTvgJe37WhVBmK8dHWrgxJvsXjzE3q3AmRHrxFtroissLr+A5834hX5W8guZtPytzk+PGvVIHL70MhyNublPDzVxNinmSsBumIxLAXoi1nq99wl7lAVjduebwFql8NdYVOGKgO5BOhbL8YC7R37LLezx+RlMFSK2KCOFvHGz4gAbDq334wKNoBRjG6FdesjPmNNNHtdoO/6xlduI05Ql+SPVpO78TV83fdgCrQGd6b0/Xps3PqeQq6qaECrtvBMFahbg1H8ZOFaQ4nueOwUFxjtmXIttDTZOZP6K/ykJhdVzN54Ck4tOgVzplbzE0x7bMY6682T3C+oZ+cciMSA/rzXfizxz2wDfAuymxzu/t12yBlpLgBQn6M5KGBgYHrAwlvyhXoJF0dJH4JB2VYrQ2SXHheLrWN8LBdADRSsDtNks7SfbZeNAkel+6ENdH/KHebbFgsvltsetEepjcowjbP6DqTjzlQx74pN96mARbYnfCQuB9T7QNLZGxdbgEOIjclRDEl1EG2hpp2BPy+bDsBF8jgfWAYYGuGePGCS/s=
-  file: ./build/libs/*.jar
-  skip_cleanup: true
+  file: ./build/libs/service-synology-chatbot-0.0.1.jar
 
 before_deploy:
 - pwd
