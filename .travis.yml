@@ -5,7 +5,7 @@ jdk:
 deploy:
   provider: releases
   api_key: 
-    secure: "$GITHUB_SECURE_TOKEN"
+    secure: $GITHUB_SECURE_TOKEN
   file: "$TRAVIS_BUILD_DIR/libs/service-synology-chatbot-*.jar"
   skip_cleanup: true
   on:
