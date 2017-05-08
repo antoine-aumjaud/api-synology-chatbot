@@ -4,6 +4,6 @@ jdk:
 deploy:
   provider: releases
   api_key:
-    secure: V8jDS+XZu9zxGwGmUpTMDWZa8GsGYh3CChwmQxnkD1xlpWnXl7y4YGVV2U+iBEkdeWMXxC8hCF4slYHxV3JvNzxdQ6y+MVqp1Yyq0o7c9IGmvDGYeVxRI70gkdUns3Beu46NS/pQDKT1NxrpoIpgeW6laAydR4UMk8aNbu7b3KW5cgFIQ9vf7yRl2pQhguczMp0GORqfhL8mbqKExk5uvs2Bhw0rAFhHwhYgXyu3BmT14gleD6mB5uHcVQSj0V28/W1p1e+dy68x7sR9fqH/wAo3uS4SIbCxhrBM7RPs1hAjK+EmBDCQPeZoFQ1tWMBJLaPzbGoj4CFuAZ1cAl2+C4NU1dV3EPyfbWvmM5WwyUdq6oCg3IZjgplGngZ/GbyJTMXlmM+Fle/fw0e3g3NJmQzyVdgGO1nDXvrsjs8UcJTi9nMu6dAdtwTKCO3OffKEZiGTz/FLvw/j3kLzQ/QopVJwHU8qW8QAGqlFOURH313S0rBpzAou/qQGmV+gWfMFg2N2v2pAQMWy59oS1NNw/qbvIallHktso7xg7YykAfZMl5wPL6PtcuFaakcpjRhT8D/0uMfBHFp+NzKNGkvqnEkwhch5htzfQsbXsjj6ba+43DueMKd0Kza/Fz6fbiOw2nMFqrfh7KQHXXsP8+NwVF6zPCm8slof8g6ynIOLIjY=
-  file: "$TRAVIS_BUILD_DIR/libs/service-synology-chatbot-*.jar"
+    secure: $GITHUB_SECURE_TOKEN
+  file: "$TRAVIS_BUILD_DIR/build/libs/*.jar"
   skip_cleanup: true
