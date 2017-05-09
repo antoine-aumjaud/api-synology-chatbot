@@ -1,10 +1,23 @@
 language: java
 jdk:
-- oraclejdk8
+  - oraclejdk8
+os:
+  - linux
+
+sudo: required
+
+services:
+  - docker
+
+cache:
+  directories:
+    - $HOME/.m2
 
 before_deploy:
-- export RELEASE_PKG_FILE=$(ls build/libs/*.jar)
-- echo "deploying $RELEASE_PKG_FILE to GitHub releases"
+  - export RELEASE_PKG_FILE=$(ls build/libs/*.jar)
+  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
+  # - pwd
+  # - find .
 
 deploy:
   skip_cleanup: true
@@ -16,7 +29,12 @@ deploy:
     tags: true
     repo: antoine-aumjaud/api-syno-chatbot
 
-
-# before_deploy:
-# - pwd
-# - find .
+after_deploy:
+  - docker login 
+ 
+after_success:
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
+    docker build -t antoineaumjaud/service-synology-chatbot:latest .;
+    docker push antoineaumjaud/service-synology-chatbot;
+    fi
