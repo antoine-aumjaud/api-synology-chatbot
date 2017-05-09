@@ -14,25 +14,24 @@ cache:
     - $HOME/.m2
     - $HOME/.gradle/wrapper/dists
 
-before_deploy:
-  - export RELEASE_PKG_FILE=$(ls build/libs/*.jar)
-  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
-  # - pwd
-  # - find .
-
-deploy:
-  skip_cleanup: true
-  provider: releases
-  api_key:
-    secure: JXWU7wjIySfptpem+26z9bQFlkJTUGRH/5GhSZDYkgo/v+KY+pi2+/2llVU2/ES/VnGmqEnB/WRkyWzwZpb5+tTNUUnaAiDPqoZGDZfctxK4aKmtStXs/F9Op8RhRDN81zQTvgJe37WhVBmK8dHWrgxJvsXjzE3q3AmRHrxFtroissLr+A5834hX5W8guZtPytzk+PGvVIHL70MhyNublPDzVxNinmSsBumIxLAXoi1nq99wl7lAVjduebwFql8NdYVOGKgO5BOhbL8YC7R37LLezx+RlMFSK2KCOFvHGz4gAbDq334wKNoBRjG6FdesjPmNNNHtdoO/6xlduI05Ql+SPVpO78TV83fdgCrQGd6b0/Xps3PqeQq6qaECrtvBMFahbg1H8ZOFaQ4nueOwUFxjtmXIttDTZOZP6K/ykJhdVzN54Ck4tOgVzplbzE0x7bMY6682T3C+oZ+cciMSA/rzXfizxz2wDfAuymxzu/t12yBlpLgBQn6M5KGBgYHrAwlvyhXoJF0dJH4JB2VYrQ2SXHheLrWN8LBdADRSsDtNks7SfbZeNAkel+6ENdH/KHebbFgsvltsetEepjcowjbP6DqTjzlQx74pN96mARbYnfCQuB9T7QNLZGxdbgEOIjclRDEl1EG2hpp2BPy+bDsBF8jgfWAYYGuGePGCS/s=
-  file: "${RELEASE_PKG_FILE}"
-  on:
-    tags: true
-    repo: antoine-aumjaud/api-syno-chatbot
- 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
     docker build -t antoineaumjaud/api-synology-chatbot:latest .;
     docker push antoineaumjaud/api-synology-chatbot;
     fi
+
+
+#before_deploy:
+#  - export RELEASE_PKG_FILE=$(ls build/libs/*.jar)
+#  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
+
+#deploy:
+#  skip_cleanup: true
+#  provider: releases
+#  api_key:
+#  file: "${RELEASE_PKG_FILE}"
+#  on:
+#    tags: true
+#    repo: antoine-aumjaud/api-syno-chatbot
+
