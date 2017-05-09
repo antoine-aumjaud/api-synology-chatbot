@@ -12,6 +12,7 @@ services:
 cache:
   directories:
     - $HOME/.m2
+    - $HOME/.gradle/wrapper/dists
 
 before_deploy:
   - export RELEASE_PKG_FILE=$(ls build/libs/*.jar)
@@ -28,9 +29,6 @@ deploy:
   on:
     tags: true
     repo: antoine-aumjaud/api-syno-chatbot
-
-after_deploy:
-  - docker login 
  
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then

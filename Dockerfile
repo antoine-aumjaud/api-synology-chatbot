@@ -9,4 +9,6 @@ WORKDIR /home/app
 VOLUME /home/app/conf
 EXPOSE 8080
 
+COPY 
+
 CMD java -cp .:conf -jar run.jar
