@@ -7,7 +7,7 @@ ENV HOME /home/app
 WORKDIR /home/app
 
 VOLUME /home/app/conf
-EXPOSE 8080
+EXPOSE 9080
 
 COPY build/libs/*.jar executablejar.jar
 
