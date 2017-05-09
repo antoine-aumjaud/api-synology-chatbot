@@ -9,6 +9,6 @@ WORKDIR /home/app
 VOLUME /home/app/conf
 EXPOSE 8080
 
-COPY 
+COPY build/libs/*.jar executablejar.jar
 
-CMD java -cp .:conf -jar run.jar
+CMD java -cp .:conf -jar executablejar.jar
