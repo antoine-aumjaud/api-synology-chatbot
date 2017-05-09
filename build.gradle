@@ -17,6 +17,6 @@ dependencies {
 }
 
 jar {
-    baseName = 'service-synology-chatbot'
+    baseName = 'api-synology-chatbot'
     version =  '0.0.1'
 }
