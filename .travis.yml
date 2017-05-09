@@ -35,6 +35,6 @@ after_deploy:
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
-    docker build -t antoineaumjaud/service-synology-chatbot:latest .;
-    docker push antoineaumjaud/service-synology-chatbot;
+    docker build -t antoineaumjaud/api-synology-chatbot:latest .;
+    docker push antoineaumjaud/api-synology-chatbot;
     fi
