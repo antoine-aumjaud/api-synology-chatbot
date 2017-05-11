@@ -12,11 +12,19 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile 'com.sparkjava:spark-core:2.2'
-    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.2'
+    compile('com.sparkjava:spark-core:2.6.0') {
+    	exclude group: 'org.slf4j' //old version
+	}
+	compile 'com.google.code.gson:gson:2.8.0'
+    testCompile 'junit:junit:4.12'
+    compile 'ch.qos.logback:logback-classic:1.2.3' //compile for slf4j
 }
 
 jar {
     baseName = 'api-synology-chatbot'
     version =  '0.0.1'
+}
+
+startScripts {
+    classpath += files('src/dist/lib/conf')
 }
