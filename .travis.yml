@@ -9,10 +9,14 @@ sudo: required
 services:
   - docker
 
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-    - $HOME/.m2
-    - $HOME/.gradle/wrapper/dists
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
@@ -20,18 +24,3 @@ after_success:
     docker build -t antoineaumjaud/api-synology-chatbot:latest .;
     docker push antoineaumjaud/api-synology-chatbot;
     fi
-
-
-#before_deploy:
-#  - export RELEASE_PKG_FILE=$(ls build/libs/*.jar)
-#  - echo "deploying $RELEASE_PKG_FILE to GitHub releases"
-
-#deploy:
-#  skip_cleanup: true
-#  provider: releases
-#  api_key:
-#  file: "${RELEASE_PKG_FILE}"
-#  on:
-#    tags: true
-#    repo: antoine-aumjaud/api-syno-chatbot
-

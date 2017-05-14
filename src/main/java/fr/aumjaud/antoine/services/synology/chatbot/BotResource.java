@@ -13,7 +13,7 @@ import spark.Request;
 import spark.Response;
 
 public class BotResource {
- 
+
 	private static Logger logger = LoggerFactory.getLogger(BotResource.class);
 
 	private Properties properties;
@@ -28,10 +28,9 @@ public class BotResource {
 		gson = builder.create();
 	}
 
-    public String message(Request request, Response response) {
-      logger.info(request.body());  
-    	return "ok";
-    }
-    
-    
+	public String message(Request request, Response response) {
+		logger.info(request.body());
+		return "ok";
+	}
+
 }

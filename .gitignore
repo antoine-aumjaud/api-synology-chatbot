@@ -4,3 +4,5 @@
 .settings/
 build/
 bin/
+/logs/
+/lib/

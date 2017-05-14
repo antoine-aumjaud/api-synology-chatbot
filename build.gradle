@@ -3,15 +3,27 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
-
-repositories {
-    mavenCentral()
-}
+version = '0.0.1'
+def apiJavalibVersion = '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+repositories {
+    mavenCentral()
+	flatDir {
+    	dirs 'lib'
+    }
+}
+
+def apiJavalibFile = new File('lib/api-javalib-' + apiJavalibVersion + '.jar')
+if (!apiJavalibFile.exists()) {
+    new URL("https://github.com/antoine-aumjaud/api-javalib/releases/download/v${apiJavalibVersion}/api-javalib-${apiJavalibVersion}.jar")
+    	.withInputStream { is -> apiJavalibFile.withOutputStream{ it << is }}
+}
+
 dependencies {
+	compile name: 'api-javalib', version: apiJavalibVersion
     compile('com.sparkjava:spark-core:2.6.0') {
     	exclude group: 'org.slf4j' //old version
 	}
@@ -20,11 +32,21 @@ dependencies {
     compile 'ch.qos.logback:logback-classic:1.2.3' //compile for slf4j
 }
 
-jar {
-    baseName = 'api-synology-chatbot'
-    version =  '0.0.1'
+processResources {
+    filter org.apache.tools.ant.filters.ReplaceTokens, tokens: [
+        "application.name": project.property("name"),
+        "application.version": project.property("version")
+    ]
 }
 
-startScripts {
+distributions {
+    custom {
+    	version = '' //remove version from path in TAR file (for docker container build)
+	}	
+}
+startScripts { //override classpath in distribution task
     classpath += files('src/dist/lib/conf')
+}
+run { //override classpath in run task
+  classpath += files('src/dist/lib/conf')
 }
