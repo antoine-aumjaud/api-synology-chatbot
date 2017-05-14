@@ -1,9 +1,11 @@
 <configuration>
 
+	<shutdownHook class="ch.qos.logback.core.hook.DelayingShutdownHook"/>
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/api-synology.txt</file>
+        <file>logs/api-synology-chatbot.txt</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/api-synology.%d{yyyy-MM-dd}.txt</fileNamePattern>
+            <fileNamePattern>logs/api-synology-chatbot.%d{yyyy-MM-dd}.txt</fileNamePattern>
             <!-- keep 1 days' worth of history -->
             <maxHistory>5</maxHistory>
         </rollingPolicy>
