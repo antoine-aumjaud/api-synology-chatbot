@@ -12,7 +12,7 @@ public class LaunchServer {
 	//private static Logger logger = LoggerFactory.getLogger(LaunchServer.class);
 
 	private static String COMMON_CONFIG_FILENAME = "common.properties";
-private static String APP_CONFIG_FILENAME = "api-docker.properties";
+private static String APP_CONFIG_FILENAME = "api-synology-chatbot.properties";
 
 	public static void main(String... args) {
 		PropertyHelper propertyHelper = new PropertyHelper();
