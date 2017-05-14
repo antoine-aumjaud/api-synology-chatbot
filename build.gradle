@@ -16,7 +16,7 @@ repositories {
     }
 }
 
-def apiJavalibFile = new File('lib/api-javalib-' + apiJavalibVersion + '.jar')
+def apiJavalibFile = new File(projectDir.getAbsolutePath() + '/lib/api-javalib-' + apiJavalibVersion + '.jar')
 if (!apiJavalibFile.exists()) {
     new URL("https://github.com/antoine-aumjaud/api-javalib/releases/download/v${apiJavalibVersion}/api-javalib-${apiJavalibVersion}.jar")
     	.withInputStream { is -> apiJavalibFile.withOutputStream{ it << is }}
