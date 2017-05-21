@@ -24,7 +24,8 @@ private static String APP_CONFIG_FILENAME = "api-synology-chatbot.properties";
 		get("/hi", (request, response) -> technicalResource.hi());
 		get("/info", (request, response) -> technicalResource.info());
 
-		post("/", "application/json", botResource::message);
+		post("/receive", "application/json", botResource::receiveMessage);
+		post("/send/:user", "application/json", botResource::sendMessage);
 
 	}
 

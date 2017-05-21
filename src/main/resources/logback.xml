@@ -15,9 +15,10 @@
         </encoder>
     </appender>
 
-    <root level="info" additivity="false">
+	<logger name="fr.aumjaud.antoine" level="DEBUG"/>
+
+    <root level="INFO" additivity="false">
         <appender-ref ref="FILE"/>
     </root>
-
 
 </configuration>
