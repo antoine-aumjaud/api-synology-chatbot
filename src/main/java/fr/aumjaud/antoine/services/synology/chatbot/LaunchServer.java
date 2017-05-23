@@ -27,8 +27,10 @@ public class LaunchServer {
 
 			@Override
 			public void initSpark(String securePath) {
+				post("/receive", botResource::receiveMessage); //not secure by my secure-key... doesn't work (use the bot one)
+				
 				path(securePath, () -> {
-					post("/receive", botResource::receiveMessage);
+					post("/receive/", botResource::receiveMessage); //let here for GUI API
 					post("/send/:user", botResource::sendMessage);
 				});
 			}
