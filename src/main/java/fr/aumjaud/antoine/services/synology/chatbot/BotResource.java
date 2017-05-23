@@ -1,20 +1,17 @@
 package fr.aumjaud.antoine.services.synology.chatbot;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.ProtocolException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
+import fr.aumjaud.antoine.services.common.http.HttpHelper;
+import fr.aumjaud.antoine.services.common.http.PostResponse;
+import fr.aumjaud.antoine.services.common.security.NoAccessException;
+import fr.aumjaud.antoine.services.common.security.SecurityHelper;
+import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import spark.Request;
 import spark.Response;
 
@@ -22,43 +19,73 @@ public class BotResource {
 
 	private static Logger logger = LoggerFactory.getLogger(BotResource.class);
 
+	private SecurityHelper securityHelper = new SecurityHelper();
+	private HttpHelper httpHelper = new HttpHelper();
 	private Properties properties;
-	private Gson gson;
+	private List<String> validTokens;
 
-	public BotResource(Properties properties) {
+	/**
+	 * Set config 
+	 * @param properties the config to set
+	 * @return true if config set successfully
+	 */
+	public boolean setConfig(Properties properties) {
 		this.properties = properties;
-
-		GsonBuilder builder = new GsonBuilder();
-		builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
-
-		gson = builder.create();
+		validTokens = Arrays.asList(properties.getProperty("chat-tokens").split(";"));
+		return true;
 	}
 
 	public String receiveMessage(Request request, Response response) {
-		logger.info(request.body());
 
-		
+		// Check parameters
+		String token = request.queryParams("token");
+		if (token == null) {
+			throw new WrongRequestException("missing token", "No tocken in query");
+		}
+		String userName = request.queryParams("username");
+		if (userName == null) {
+			throw new WrongRequestException("missing username", "");
+		}
+
+		// Check secure token
+		if (!validTokens.contains(token)){
+			throw new NoAccessException("unknown token", "Unknown Tocken: " + token);
+		}
+
+	
+		//read message
+		String message = request.queryParams("text");
+
+		// token=xxx&channel_id=3&channel_name=&user_id=2&username=antoine
+		// &post_id=12884901899&timestamp=1495375841841&text=test&trigger_word=test
+//TODO conf token
+
+		// Build response
+		String payload = String.format("payload={\"text\": \"%s\"}", message);
+
 		return "ok";
 	}
 
 	public String sendMessage(Request request, Response response) {
-		return sendMessage(request.params("user"), request.body()) ? "send" : "error";
-	}
-
-	private boolean sendMessage(String user, String message) {
+		
 		// Check parameters
+		String user = request.params("user");
 		if (user == null)
-			throw new IllegalArgumentException("user is null");
+			throw new WrongRequestException("user is null", "User is not present");
+		String message = request.body();
 		if (message == null)
-			throw new IllegalArgumentException("message is null");
+			throw new WrongRequestException("message is null", "Message to send is not present");
 
 		// Check configuration
 		String token = properties.getProperty("token." + user);
 		if (token == null)
-			throw new IllegalStateException("user doesn't have a token set: " + user);
-		String configUrl = properties.getProperty("chat.url");
-		if (configUrl == null)
-			throw new IllegalStateException("chat.url not defined in configuration");
+			throw new WrongRequestException("unknown user", "user doesn't have a token set: " + user);
+		String targetUrl = properties.getProperty("chat.url");
+		if (targetUrl == null)
+			throw new WrongRequestException("missing configuration", "chat.url not defined in configuration");
+
+		// Build target URL
+		targetUrl = String.format(targetUrl, token);
 
 		// Controle parameters values
 		if (message.contains("\")"))
@@ -67,33 +94,13 @@ public class BotResource {
 		// Build payload
 		String payload = String.format("payload={\"text\": \"%s\"}", message);
 
-		// POST message to an URL
-		byte[] postData = payload.getBytes(StandardCharsets.UTF_8);
-		try {
-			URL url = new URL(String.format(configUrl, token));
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setDoOutput(true);
-			conn.setInstanceFollowRedirects(false);
-			conn.setUseCaches(false);
-			conn.setRequestProperty("Content-Type", "application/json");
-			conn.setRequestProperty("charset", "utf-8");
-			conn.setRequestProperty("Content-Length", Integer.toString(postData.length));
-			conn.setRequestMethod("POST");
-			try (DataOutputStream dos = new DataOutputStream(conn.getOutputStream())) {
-				dos.write(postData);
-				logger.debug("Message {} sent to user {}, response: ", message, user, conn.getResponseMessage());
-				return true;
-			} catch (IOException e) {
-				logger.error("Can't write message", e);
-			}
-		} catch (ProtocolException e) {
-			logger.error("Can't POST message", e);
-		} catch (IOException e) {
-			logger.error("Error while write message", e);
+		PostResponse postResponse = httpHelper.postData(targetUrl, payload);
+		if (postResponse != null) {
+			logger.debug("Message {} sent to user {}, response: {}", message, user, postResponse);
+			return "sent";
+		} else {
+			logger.error("Message {} NOT sent to user {}", message, user);
+			return "error";
 		}
-		logger.error("Message {} NOT sent to user {}", message, user);
-		return false;
-
 	}
-
 }
