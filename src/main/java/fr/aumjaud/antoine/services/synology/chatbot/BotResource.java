@@ -88,27 +88,24 @@ public class BotResource {
 		if (payload == null)
 			throw new WrongRequestException("payload is null", "Payload to send is not present");
 
-		//Parse payload
+		// Parse payload
 		TravisPayload travisPayload = getTravisPayload(payload);
-		
-		//Transform to message
+
+		// Transform to message
 		String message = getTravisMessage(travisPayload);
 
 		return sendMessage(request, response, message);
 	}
 
 	String getTravisMessage(TravisPayload travisPayload) {
-		if (travisPayload.getRepository() ==null||travisPayload.getRepository().getName() == null || travisPayload.getAuthorName() == null
-				|| travisPayload.getStatusMessage() == null || travisPayload.getMessage() == null
-				|| travisPayload.getRepository().getUrl() == null)
+		if (travisPayload.getRepository() == null)
 			throw new WrongRequestException("payload is not well formed", "Payload has null value");
 
 		String textMessage = travisPayload.getStatus() == 0 //
 				? "Build success of %1$s" //
 				: "Build <%5$s|%3$s> of %1$s: [%2$s] %4$s";
-		return String.format(textMessage, travisPayload.getRepository().getName(),
-				travisPayload.getAuthorName(), travisPayload.getStatusMessage(), travisPayload.getMessage(),
-				travisPayload.getRepository().getUrl());
+		return String.format(textMessage, travisPayload.getRepository().getName(), travisPayload.getAuthorName(),
+				travisPayload.getStatusMessage(), travisPayload.getMessage(), travisPayload.getRepository().getUrl());
 	}
 
 	TravisPayload getTravisPayload(String message) {
