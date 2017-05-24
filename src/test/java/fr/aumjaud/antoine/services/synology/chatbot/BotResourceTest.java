@@ -3,6 +3,7 @@ package fr.aumjaud.antoine.services.synology.chatbot;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -13,6 +14,7 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
+import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
 import fr.aumjaud.antoine.services.synology.chatbot.model.TravisRepository;
 
@@ -48,21 +50,38 @@ public class BotResourceTest {
 	}
 
 	@Test
-	public void getTravisPayload_should_return_a_success_message_is_payoff_says_it_is_a_sucess() throws IOException, URISyntaxException {
+	public void getTravisPayload_should_return_a_success_message_is_payoff_says_it_is_a_sucess()
+			throws IOException, URISyntaxException {
 		// Given
 		TravisPayload payload = new TravisPayload() {
-			public String getMessage() { return "commit message"; };
+			public String getMessage() {
+				return "commit message";
+			};
+
 			public TravisRepository getRepository() {
 				return new TravisRepository() {
-					public String getName() {return "repo_name";};
-					public String getUrl() {return "http://repo_url" ;};
+					public String getName() {
+						return "repo_name";
+					};
+
+					public String getUrl() {
+						return "http://repo_url";
+					};
 				};
 			}
-			public String getAuthorName() {return "aa";};
-			public int getStatus() {return 0;};
-			public String getStatusMessage() {return "status";};
+
+			public String getAuthorName() {
+				return "aa";
+			};
+
+			public int getStatus() {
+				return 0;
+			};
+
+			public String getStatusMessage() {
+				return "status";
+			};
 		};
-		
 
 		// When
 		String msg = botResource.getTravisMessage(payload);
@@ -72,27 +91,57 @@ public class BotResourceTest {
 	}
 
 	@Test
-	public void getTravisPayload_should_return_a_failed_message_is_payoff_says_it_is_a_failed() throws IOException, URISyntaxException {
+	public void getTravisPayload_should_return_a_failed_message_is_payoff_says_it_is_a_failed()
+			throws IOException, URISyntaxException {
 		// Given
 		TravisPayload payload = new TravisPayload() {
-			public String getMessage() { return "commit message"; };
+			public String getMessage() {
+				return "commit message";
+			};
+
 			public TravisRepository getRepository() {
 				return new TravisRepository() {
-					public String getName() {return "repo_name";};
-					public String getUrl() {return "http://repo_url" ;};
+					public String getName() {
+						return "repo_name";
+					};
+
+					public String getUrl() {
+						return "http://repo_url";
+					};
 				};
 			}
-			public String getAuthorName() {return "aa";};
-			public int getStatus() {return 1;};
-			public String getStatusMessage() {return "status";};
+
+			public String getAuthorName() {
+				return "aa";
+			};
+
+			public int getStatus() {
+				return 1;
+			};
+
+			public String getStatusMessage() {
+				return "status";
+			};
 		};
-		
 
 		// When
 		String msg = botResource.getTravisMessage(payload);
 
 		// Then
 		assertEquals("Build <http://repo_url|status> of repo_name: [aa] commit message", msg);
+	}
+
+	@Test(expected= WrongRequestException.class)
+	public void getTravisPayload_should_throw_an_exception_if_missing_values_in_payoff()
+			throws IOException, URISyntaxException {
+		// Given
+		TravisPayload payload = new TravisPayload();
+
+		// When
+		botResource.getTravisMessage(payload);
+
+		// Then
+		fail("should has thrown an exception");
 	}
 
 }

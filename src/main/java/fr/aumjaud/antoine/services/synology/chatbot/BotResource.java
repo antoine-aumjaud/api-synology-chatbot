@@ -88,20 +88,27 @@ public class BotResource {
 		if (payload == null)
 			throw new WrongRequestException("payload is null", "Payload to send is not present");
 
+		//Parse payload
 		TravisPayload travisPayload = getTravisPayload(payload);
+		
+		//Transform to message
 		String message = getTravisMessage(travisPayload);
 
 		return sendMessage(request, response, message);
 	}
 
 	String getTravisMessage(TravisPayload travisPayload) {
+		if (travisPayload.getRepository() ==null||travisPayload.getRepository().getName() == null || travisPayload.getAuthorName() == null
+				|| travisPayload.getStatusMessage() == null || travisPayload.getMessage() == null
+				|| travisPayload.getRepository().getUrl() == null)
+			throw new WrongRequestException("payload is not well formed", "Payload has null value");
+
 		String textMessage = travisPayload.getStatus() == 0 //
 				? "Build success of %1$s" //
 				: "Build <%5$s|%3$s> of %1$s: [%2$s] %4$s";
-		String message = String.format(textMessage, travisPayload.getRepository().getName(),
+		return String.format(textMessage, travisPayload.getRepository().getName(),
 				travisPayload.getAuthorName(), travisPayload.getStatusMessage(), travisPayload.getMessage(),
 				travisPayload.getRepository().getUrl());
-		return message;
 	}
 
 	TravisPayload getTravisPayload(String message) {
@@ -116,7 +123,6 @@ public class BotResource {
 
 		return sendMessage(request, response, message);
 	}
-
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	private String sendMessage(Request request, Response response, String message) {
@@ -139,10 +145,11 @@ public class BotResource {
 
 		// Escape message
 		if (message.contains("\")")) {
-			message = message.replace("\"", "\\\""); 
+			message = message.replace("\"", "\\\"");
 		}
-		
-		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
+
+		// Build payload
+		// (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
 		String payload = String.format("payload={\"text\": \"%s\"}", message);
 
 		PostResponse postResponse = httpHelper.postData(targetUrl, payload);

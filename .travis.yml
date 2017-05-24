@@ -24,5 +24,12 @@ after_success:
     docker build -t antoineaumjaud/api-synology-chatbot:latest .;
     docker push antoineaumjaud/api-synology-chatbot;
     fi
-
     
+notifications:
+  email: 
+    on_failure: always
+    on_sucess: never
+  webhooks: 
+    urls: http://api-synology-chatbot.aumjaud.fr/secure/send-travis/travis-ci?secure-key=$CHAT_SECURE_KEY
+    on_sucess: always
+    on_failure: always
