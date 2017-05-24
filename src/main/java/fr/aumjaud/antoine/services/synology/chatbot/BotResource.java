@@ -3,6 +3,7 @@ package fr.aumjaud.antoine.services.synology.chatbot;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,6 +85,10 @@ public class BotResource {
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	public String sendTravisPayload(Request request, Response response) {
+
+		logger.debug(">>>> " +  request.headers().stream().collect(Collectors.joining(", ")));
+		
+		
 		String payload = request.queryParams("payload");
 		if (payload == null)
 			throw new WrongRequestException("payload is null", "Payload to send is not present");
@@ -151,10 +156,10 @@ public class BotResource {
 
 		PostResponse postResponse = httpHelper.postData(targetUrl, payload);
 		if (postResponse != null) {
-			logger.debug("Message {} sent to user {}, response: {}", message, user, postResponse);
+			logger.debug("Message '{}' sent to user {}, response: {}", message, user, postResponse);
 			return "{\"status\"=\"sent\"}";
 		} else {
-			logger.error("Message {} NOT sent to user {}", message, user);
+			logger.error("Message '{}' NOT sent to user {}", message, user);
 			return "{\"status\"=\"error\"}";
 		}
 	}
