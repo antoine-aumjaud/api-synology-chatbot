@@ -12,11 +12,11 @@ services:
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+  
 cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
-
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
@@ -29,7 +29,8 @@ notifications:
   email: 
     on_failure: always
     on_sucess: never
-  webhooks: 
-    urls: http://api-synology-chatbot.aumjaud.fr/secure/send-travis/travis-ci?secure-key=$CHAT_SECURE_KEY
-    on_sucess: always
+  webhooks:
+    urls:
+      - https://api-synology-chatbot.aumjaud.fr/send-travis/travis-ci
+    on_success: always
     on_failure: always
