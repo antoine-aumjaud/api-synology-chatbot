@@ -1,9 +1,18 @@
 package fr.aumjaud.antoine.services.synology.chatbot;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,14 +93,36 @@ public class BotResource {
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////
-	public String sendTravisPayload(Request request, Response response) {
-
-		logger.debug(">>>> " +  request.headers().stream().collect(Collectors.joining(", ")));
-		
-		
+	public String sendTravisPayload(Request request, Response response) throws InvalidKeyException {
 		String payload = request.queryParams("payload");
 		if (payload == null)
 			throw new WrongRequestException("payload is null", "Payload to send is not present");
+
+		try {
+logger.debug("0>>>" + payload);
+logger.debug("1>>>" + Base64.getEncoder().encode(payload.getBytes("utf-8")));
+			// Obtain the Signature header value, and base64-decode it.
+			String signatureB64 = request.headers("Signature");
+logger.debug("2>>>" + signatureB64);
+			byte[] signature = Base64.getDecoder().decode(signatureB64);
+			//Obtain the public key corresponding to the private key that signed the payload. 
+			//This is available at the /config endpoint's config.notifications.webhook.public_key on the relevant API server. (e.g., https://api.travis-ci.org/config)
+			//https://api.travis-ci.org/config
+			//{"config":{"host":"travis-ci.org","shorten_host":"trvs.io","assets":{"host":"travis-ci.org"},"pusher":{"key":"5df8ac576dcccf4fd076"},"github":{"api_url":"https://api.github.com","scopes":["read:org","user:email","repo_deployment","repo:status","write:repo_hook"]},
+			//"notifications":{"webhook":{"public_key":"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvtjdLkS+FP+0fPC09j25\ny/PiuYDDivIT86COVedvlElk99BBYTrqNaJybxjXbIZ1Q6xFNhOY+iTcBr4E1zJu\ntizF3Xi0V9tOuP/M8Wn4Y/1lCWbQKlWrNQuqNBmhovF4K3mDCYswVbpgTmp+JQYu\nBm9QMdieZMNry5s6aiMA9aSjDlNyedvSENYo18F+NYg1J0C0JiPYTxheCb4optr1\n5xNzFKhAkuGs4XTOA5C7Q06GCKtDNf44s/CVE30KODUxBi0MCKaxiXw/yy55zxX2\n/YdGphIyQiA5iO1986ZmZCLLW8udz9uhW5jUr3Jlp9LbmphAC61bVSf4ou2YsJaN\n0QIDAQAB\n-----END PUBLIC KEY-----"}}}}
+/*TODO*/	byte[] keyBytes = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvtjdLkS+FP+0fPC09j25\ny/PiuYDDivIT86COVedvlElk99BBYTrqNaJybxjXbIZ1Q6xFNhOY+iTcBr4E1zJu\ntizF3Xi0V9tOuP/M8Wn4Y/1lCWbQKlWrNQuqNBmhovF4K3mDCYswVbpgTmp+JQYu\nBm9QMdieZMNry5s6aiMA9aSjDlNyedvSENYo18F+NYg1J0C0JiPYTxheCb4optr1\n5xNzFKhAkuGs4XTOA5C7Q06GCKtDNf44s/CVE30KODUxBi0MCKaxiXw/yy55zxX2\n/YdGphIyQiA5iO1986ZmZCLLW8udz9uhW5jUr3Jlp9LbmphAC61bVSf4ou2YsJaN\n0QIDAQAB\n-----END PUBLIC KEY-----".getBytes(); 
+			PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(keyBytes));
+			// Verify the signature using the public key and SHA1 digest.
+			Signature sig = Signature.getInstance("SHA1withRSA");
+			sig.initVerify(publicKey);
+			sig.update(payload.getBytes("utf-8"));
+			if (!sig.verify(signature))
+				throw new NoAccessException("signature is not valid", "Signature is not valid");
+		} catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | SignatureException
+				| UnsupportedEncodingException e) {
+			logger.error("Exception during check signature", e);
+			throw new NoAccessException("signature error", "Can't check signature");
+		}
 
 		// Parse payload
 		TravisPayload travisPayload = getTravisPayload(payload);

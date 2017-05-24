@@ -27,7 +27,7 @@ public class LaunchServer {
 
 			@Override
 			public void initSpark(String securePath) {
-				post("/send-travis/:user", botResource::sendTravisPayload); //not secure, Travis doesn't manage env variable replacement in URL 
+				post("/send-travis/:user", botResource::sendTravisPayload); //not secure, use Travis signature 
 				path(securePath, () -> {
 					post("/receive/", "application/json", botResource::receiveMessage); //let last "/" (bug on syno chat integration)
 					post("/send-message/:user", botResource::sendBody);
