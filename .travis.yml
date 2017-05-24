@@ -24,3 +24,5 @@ after_success:
     docker build -t antoineaumjaud/api-synology-chatbot:latest .;
     docker push antoineaumjaud/api-synology-chatbot;
     fi
+
+    

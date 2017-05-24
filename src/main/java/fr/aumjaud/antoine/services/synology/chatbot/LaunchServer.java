@@ -28,8 +28,9 @@ public class LaunchServer {
 			@Override
 			public void initSpark(String securePath) {
 				path(securePath, () -> {
-					post("/receive/", botResource::receiveMessage); //let last "/" (bug on syno chat integration)
-					post("/send/:user", botResource::sendMessage);
+					post("/receive/", "application/json", botResource::receiveMessage); //let last "/" (bug on syno chat integration)
+					post("/send-message/:user", botResource::sendBody);
+					post("/send-travis/:user", botResource::sendTravisPayload);
 				});
 			}
 		});

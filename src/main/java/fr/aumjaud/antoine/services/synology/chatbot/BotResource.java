@@ -7,10 +7,15 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
 import fr.aumjaud.antoine.services.common.http.PostResponse;
 import fr.aumjaud.antoine.services.common.security.NoAccessException;
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
+import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
 import spark.Request;
 import spark.Response;
 
@@ -19,8 +24,16 @@ public class BotResource {
 	private static Logger logger = LoggerFactory.getLogger(BotResource.class);
 
 	private HttpHelper httpHelper = new HttpHelper();
+	private Gson gson;
+
 	private Properties properties;
 	private List<String> validTokens;
+
+	public BotResource() {
+		GsonBuilder builder = new GsonBuilder();
+		builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
+		gson = builder.create();
+	}
 
 	/**
 	 * Set config
@@ -58,7 +71,7 @@ public class BotResource {
 			throw new WrongRequestException("missing text", "No message sent");
 		}
 
-		logger.debug("Message receive: {}", message);
+		logger.debug("Message received form {}: {}", userName, message);
 		if (message.contains("key"))
 			message = "ok";
 
@@ -69,15 +82,49 @@ public class BotResource {
 		return payload;
 	}
 
-	public String sendMessage(Request request, Response response) {
+	///////////////////////////////////////////////////////////////////////////////////////
+	public String sendTravisPayload(Request request, Response response) {
+		String payload = request.queryParams("payload");
+		if (payload == null)
+			throw new WrongRequestException("payload is null", "Payload to send is not present");
+
+		TravisPayload travisPayload = getTravisPayload(payload);
+		String message = getTravisMessage(travisPayload);
+
+		return sendMessage(request, response, message);
+	}
+
+	String getTravisMessage(TravisPayload travisPayload) {
+		String textMessage = travisPayload.getStatus() == 0 //
+				? "Build success of %1$s" //
+				: "Build <%5$s|%3$s> of %1$s: [%2$s] %4$s";
+		String message = String.format(textMessage, travisPayload.getRepository().getName(),
+				travisPayload.getAuthorName(), travisPayload.getStatusMessage(), travisPayload.getMessage(),
+				travisPayload.getRepository().getUrl());
+		return message;
+	}
+
+	TravisPayload getTravisPayload(String message) {
+		return gson.fromJson(message, TravisPayload.class);
+	}
+
+	///////////////////////////////////////////////////////////////////////////////////////
+	public String sendBody(Request request, Response response) {
+		String message = request.body();
+		if (message == null)
+			throw new WrongRequestException("message is null", "Message to send is not present");
+
+		return sendMessage(request, response, message);
+	}
+
+
+	///////////////////////////////////////////////////////////////////////////////////////
+	private String sendMessage(Request request, Response response, String message) {
 
 		// Check parameters
 		String user = request.params("user");
 		if (user == null)
 			throw new WrongRequestException("user is null", "User is not present");
-		String message = request.body();
-		if (message == null)
-			throw new WrongRequestException("message is null", "Message to send is not present");
 
 		// Check configuration
 		String token = properties.getProperty("token." + user);
@@ -90,20 +137,22 @@ public class BotResource {
 		// Build target URL
 		targetUrl = String.format(targetUrl, token);
 
-		// Controle parameters values
-		if (message.contains("\")"))
-			message = message.replace("\"", "\\\"");
-
-		// Build payload
+		// Escape message
+		if (message.contains("\")")) {
+			message = message.replace("\"", "\\\""); 
+		}
+		
+		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
 		String payload = String.format("payload={\"text\": \"%s\"}", message);
 
 		PostResponse postResponse = httpHelper.postData(targetUrl, payload);
 		if (postResponse != null) {
 			logger.debug("Message {} sent to user {}, response: {}", message, user, postResponse);
-			return "sent";
+			return "{\"status\"=\"sent\"}";
 		} else {
 			logger.error("Message {} NOT sent to user {}", message, user);
-			return "error";
+			return "{\"status\"=\"error\"}";
 		}
 	}
+
 }
