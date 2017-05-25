@@ -3,8 +3,8 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
-version = '0.0.2'
-def apiJavalibVersion = '1.1.0'
+version = '0.0.3'
+def apiJavalibVersion = '1.2.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -30,6 +30,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'ch.qos.logback:logback-classic:1.2.3' //compile for slf4j
 	compile 'com.google.code.gson:gson:2.8.0'
+	compile 'org.bouncycastle:bcprov-jdk15on:1.52'
 }
 
 processResources {

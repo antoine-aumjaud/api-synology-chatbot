@@ -1,10 +1,13 @@
 package fr.aumjaud.antoine.services.synology.chatbot;
 
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
+import java.io.StringReader;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
@@ -13,7 +16,11 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +28,9 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
-import fr.aumjaud.antoine.services.common.http.PostResponse;
+import fr.aumjaud.antoine.services.common.http.HttpResponse;
 import fr.aumjaud.antoine.services.common.security.NoAccessException;
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
@@ -40,6 +48,8 @@ public class BotResource {
 	private List<String> validTokens;
 
 	public BotResource() {
+		Security.addProvider(new BouncyCastleProvider());
+
 		GsonBuilder builder = new GsonBuilder();
 		builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
 		gson = builder.create();
@@ -98,31 +108,15 @@ public class BotResource {
 		if (payload == null)
 			throw new WrongRequestException("payload is null", "Payload to send is not present");
 
-		try {
-logger.debug("0>>>" + payload);
-logger.debug("1>>>" + Base64.getEncoder().encode(payload.getBytes("utf-8")));
-			// Obtain the Signature header value, and base64-decode it.
-			String signatureB64 = request.headers("Signature");
-logger.debug("2>>>" + signatureB64);
-			byte[] signature = Base64.getDecoder().decode(signatureB64);
-			//Obtain the public key corresponding to the private key that signed the payload. 
-			//This is available at the /config endpoint's config.notifications.webhook.public_key on the relevant API server. (e.g., https://api.travis-ci.org/config)
-			//https://api.travis-ci.org/config
-			//{"config":{"host":"travis-ci.org","shorten_host":"trvs.io","assets":{"host":"travis-ci.org"},"pusher":{"key":"5df8ac576dcccf4fd076"},"github":{"api_url":"https://api.github.com","scopes":["read:org","user:email","repo_deployment","repo:status","write:repo_hook"]},
-			//"notifications":{"webhook":{"public_key":"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvtjdLkS+FP+0fPC09j25\ny/PiuYDDivIT86COVedvlElk99BBYTrqNaJybxjXbIZ1Q6xFNhOY+iTcBr4E1zJu\ntizF3Xi0V9tOuP/M8Wn4Y/1lCWbQKlWrNQuqNBmhovF4K3mDCYswVbpgTmp+JQYu\nBm9QMdieZMNry5s6aiMA9aSjDlNyedvSENYo18F+NYg1J0C0JiPYTxheCb4optr1\n5xNzFKhAkuGs4XTOA5C7Q06GCKtDNf44s/CVE30KODUxBi0MCKaxiXw/yy55zxX2\n/YdGphIyQiA5iO1986ZmZCLLW8udz9uhW5jUr3Jlp9LbmphAC61bVSf4ou2YsJaN\n0QIDAQAB\n-----END PUBLIC KEY-----"}}}}
-/*TODO*/	byte[] keyBytes = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvtjdLkS+FP+0fPC09j25\ny/PiuYDDivIT86COVedvlElk99BBYTrqNaJybxjXbIZ1Q6xFNhOY+iTcBr4E1zJu\ntizF3Xi0V9tOuP/M8Wn4Y/1lCWbQKlWrNQuqNBmhovF4K3mDCYswVbpgTmp+JQYu\nBm9QMdieZMNry5s6aiMA9aSjDlNyedvSENYo18F+NYg1J0C0JiPYTxheCb4optr1\n5xNzFKhAkuGs4XTOA5C7Q06GCKtDNf44s/CVE30KODUxBi0MCKaxiXw/yy55zxX2\n/YdGphIyQiA5iO1986ZmZCLLW8udz9uhW5jUr3Jlp9LbmphAC61bVSf4ou2YsJaN\n0QIDAQAB\n-----END PUBLIC KEY-----".getBytes(); 
-			PublicKey publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(keyBytes));
-			// Verify the signature using the public key and SHA1 digest.
-			Signature sig = Signature.getInstance("SHA1withRSA");
-			sig.initVerify(publicKey);
-			sig.update(payload.getBytes("utf-8"));
-			if (!sig.verify(signature))
-				throw new NoAccessException("signature is not valid", "Signature is not valid");
-		} catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | SignatureException
-				| UnsupportedEncodingException e) {
-			logger.error("Exception during check signature", e);
-			throw new NoAccessException("signature error", "Can't check signature");
-		}
+		String signatureB64 = request.headers("Signature");
+		if (signatureB64 == null)
+			throw new WrongRequestException("signature is null", "No signature send with payload");
+
+		// Obtain the public key corresponding to the private key that signed the payload.
+		String publicKeyStr = getTravisPublicKey();
+		
+		// Check signature
+		checkSignature(publicKeyStr, payload, signatureB64);
 
 		// Parse payload
 		TravisPayload travisPayload = getTravisPayload(payload);
@@ -131,6 +125,48 @@ logger.debug("2>>>" + signatureB64);
 		String message = getTravisMessage(travisPayload);
 
 		return sendMessage(request, response, message);
+	}
+
+	private String getTravisPublicKey() {
+		//Load public key form Travis URL
+		HttpResponse responsePublicKey = httpHelper.getData(properties.getProperty("travis.public-key.url"));
+		if (responsePublicKey.getHttpCode() != HttpCode.OK)
+			throw new NoAccessException("can't get public key", "Travis Public key is not accessible");
+
+		//Extract public key value
+		Pattern pattern = Pattern.compile(properties.getProperty("travis.public-key.regexp"));
+		Matcher matcher = pattern.matcher(responsePublicKey.getContent());
+		if (!matcher.find())
+			throw new NoAccessException("can't find public key", "Can't find Travis public key");
+		
+		return matcher.group(1).replaceAll("\\\\n", "\n");
+	}
+
+	void checkSignature(String publicKeyStr, String payload, String signatureB64) {
+		try {
+			// Obtain the Signature header value, and base64-decode it.
+			byte[] signature = Base64.getDecoder().decode(signatureB64);
+
+			// Load public key
+			byte[] keyContent;
+			try (PemReader pemReader = new PemReader(new StringReader(publicKeyStr))) {
+				keyContent = pemReader.readPemObject().getContent();
+			}
+			PublicKey publicKey = KeyFactory.getInstance("RSA", "BC")
+					.generatePublic(new X509EncodedKeySpec(keyContent));
+
+			// Verify the signature using the public key and SHA1 digest.
+			Signature sig = Signature.getInstance("SHA1withRSA");
+			sig.initVerify(publicKey);
+			sig.update(payload.getBytes("utf-8"));
+			if (!sig.verify(signature))
+				throw new NoAccessException("signature is not valid", "Signature is not valid");
+
+		} catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | SignatureException
+				| IOException | NoSuchProviderException e) {
+			logger.error("Exception during check signature", e);
+			throw new NoAccessException("signature error", "Can't check signature");
+		}
 	}
 
 	String getTravisMessage(TravisPayload travisPayload) {
@@ -185,7 +221,7 @@ logger.debug("2>>>" + signatureB64);
 		// (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
 		String payload = String.format("payload={\"text\": \"%s\"}", message);
 
-		PostResponse postResponse = httpHelper.postData(targetUrl, payload);
+		HttpResponse postResponse = httpHelper.postData(targetUrl, payload);
 		if (postResponse != null) {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, user, postResponse);
 			return "{\"status\"=\"sent\"}";
