@@ -32,6 +32,7 @@ import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
 import fr.aumjaud.antoine.services.common.http.HttpResponse;
 import fr.aumjaud.antoine.services.common.security.NoAccessException;
+import fr.aumjaud.antoine.services.common.security.SecurityHelper;
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
 import spark.Request;
@@ -39,17 +40,16 @@ import spark.Response;
 
 public class BotResource {
 
-	private static Logger logger = LoggerFactory.getLogger(BotResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(BotResource.class);
 
 	private HttpHelper httpHelper = new HttpHelper();
+	private SecurityHelper securityHelper = new SecurityHelper();
 	private Gson gson;
 
 	private Properties properties;
 	private List<String> validTokens;
 
 	public BotResource() {
-		Security.addProvider(new BouncyCastleProvider());
-
 		GsonBuilder builder = new GsonBuilder();
 		builder.setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES);
 		gson = builder.create();
@@ -116,7 +116,7 @@ public class BotResource {
 		String publicKeyStr = getTravisPublicKey();
 		
 		// Check signature
-		checkSignature(publicKeyStr, payload, signatureB64);
+		securityHelper.checkSignature(publicKeyStr, payload, signatureB64);
 
 		// Parse payload
 		TravisPayload travisPayload = getTravisPayload(payload);
@@ -142,32 +142,7 @@ public class BotResource {
 		return matcher.group(1).replaceAll("\\\\n", "\n");
 	}
 
-	void checkSignature(String publicKeyStr, String payload, String signatureB64) {
-		try {
-			// Obtain the Signature header value, and base64-decode it.
-			byte[] signature = Base64.getDecoder().decode(signatureB64);
-
-			// Load public key
-			byte[] keyContent;
-			try (PemReader pemReader = new PemReader(new StringReader(publicKeyStr))) {
-				keyContent = pemReader.readPemObject().getContent();
-			}
-			PublicKey publicKey = KeyFactory.getInstance("RSA", "BC")
-					.generatePublic(new X509EncodedKeySpec(keyContent));
-
-			// Verify the signature using the public key and SHA1 digest.
-			Signature sig = Signature.getInstance("SHA1withRSA");
-			sig.initVerify(publicKey);
-			sig.update(payload.getBytes("utf-8"));
-			if (!sig.verify(signature))
-				throw new NoAccessException("signature is not valid", "Signature is not valid");
-
-		} catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | SignatureException
-				| IOException | NoSuchProviderException e) {
-			logger.error("Exception during check signature", e);
-			throw new NoAccessException("signature error", "Can't check signature");
-		}
-	}
+	
 
 	String getTravisMessage(TravisPayload travisPayload) {
 		if (travisPayload.getRepository() == null)
