@@ -57,7 +57,6 @@ public class TravisService {
 		// Check signature
 		securityHelper.checkSignature(publicKeyStr, payload, signatureB64);
 
-logger.debug(">>"+ payload);
 		// Parse payload
 		TravisPayload travisPayload = extractTravisPayload(payload);
 
@@ -107,11 +106,11 @@ logger.debug(">>"+ payload);
 	String buildTravisMessage(TravisPayload travisPayload) {
 		if (travisPayload.getRepository() == null)
 			throw new WrongRequestException("payload is not well formed", "Payload has null value");
-logger.debug("<<< " + travisPayload.getRepository().getUrl());
+
 		String textMessage = travisPayload.getStatus() == 0 //
 				? "Build success of %1$s" //
 				: "Build <%5$s|%3$s> of %1$s: [%2$s] %4$s";
 		return String.format(textMessage, travisPayload.getRepository().getName(), travisPayload.getAuthorName(), travisPayload.getStatusMessage(),
-				travisPayload.getMessage(), travisPayload.getRepository().getUrl());
+				travisPayload.getMessage(), travisPayload.getBuildUrl());
 	}
 }

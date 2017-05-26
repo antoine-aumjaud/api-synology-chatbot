@@ -31,7 +31,7 @@ public class TravisServiceTest {
 		// Then
 		assertNotNull(dpd.getRepository());
 		assertEquals("minimal", dpd.getRepository().getName());
-		assertEquals("http://github.com/svenfuchs/minimal", dpd.getRepository().getUrl());
+		assertEquals("https://travis-ci.org/svenfuchs/minimal/builds/1", dpd.getBuildUrl());
 		assertEquals("the commit message", dpd.getMessage());
 		assertEquals(0, dpd.getStatus());
 		assertEquals("Passed", dpd.getStatusMessage());
@@ -47,12 +47,12 @@ public class TravisServiceTest {
 			public TravisRepository getRepository() {
 				return new TravisRepository() {
 					public String getName() { return "repo_name"; };
-					public String getUrl() { return "http://repo_url";};
 				};
 			}
 			public String getAuthorName() { return "aa"; };
 			public int getStatus() { return 0;};
 			public String getStatusMessage() { return "status";};
+			public String getBuildUrl() { return "http://repo_url";};
 		};
 
 		// When
@@ -71,12 +71,12 @@ public class TravisServiceTest {
 			public TravisRepository getRepository() {
 				return new TravisRepository() {
 					public String getName() { return "repo_name"; };
-					public String getUrl() { return "http://repo_url";};
 				};
 			}
 			public String getAuthorName() { return "aa"; };
 			public int getStatus() { return 1;};
 			public String getStatusMessage() { return "status";};
+			public String getBuildUrl() { return "http://repo_url";};
 		};
 
 		// When

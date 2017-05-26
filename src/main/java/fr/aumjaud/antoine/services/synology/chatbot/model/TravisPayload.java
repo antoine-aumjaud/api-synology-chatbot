@@ -6,6 +6,7 @@ public class TravisPayload {
 	private String statusMessage;
 	private String authorName;
 	private int status;
+	private String buildUrl;
 
 	private TravisRepository repository;
 
@@ -27,6 +28,10 @@ public class TravisPayload {
 
 	public int getStatus() {
 		return status;
+	}
+
+	public String getBuildUrl() {
+		return buildUrl;
 	}
 	
 	 
