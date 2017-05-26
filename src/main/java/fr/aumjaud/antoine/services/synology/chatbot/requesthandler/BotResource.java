@@ -46,10 +46,7 @@ public class BotResource {
 		}
 
 		// Call service
-		String ret = botService.receiveMessage(userToken, userName, message);
-
-		// Build response
-		return ret != null ? String.format("payload={\"text\": \"%s\"}", ret) : null;
+		return botService.receiveMessage(userToken, userName, message);
 	}
 
 	/**
@@ -81,8 +78,7 @@ public class BotResource {
 
 		return sendMessage(request, response, message);
 	}
-	
-	
+
 	/*
 	 * PRIVATE
 	 */

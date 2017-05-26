@@ -18,6 +18,7 @@ public class BotService {
 	private static final Logger logger = LoggerFactory.getLogger(BotService.class);
 
 	private HttpHelper httpHelper = new HttpHelper();
+	
 	private Properties properties;
 	private List<String> validTokens;
 
@@ -50,21 +51,18 @@ public class BotService {
 		String response = null;
 		if (message.startsWith("echo")) {
 			return "echo from bot";
-		}
-		else if (message.startsWith("pass")) {
+		} else if (message.startsWith("pass")) {
 			HttpResponse httpResponse = httpHelper.postData(properties.getProperty("file-search.url"), message.substring("pass".length()));
-			if(httpResponse != null && httpResponse.getHttpCode() == HttpCode.OK) {
+			if (httpResponse != null && httpResponse.getHttpCode() == HttpCode.OK) {
 				response = httpResponse.getContent();
+			} else {
+				logger.warn("Can't get reponse form file-search API");
 			}
-			else logger.warn("Can't get reponse form file-search API");
-		}
-		else {
-			response = null;
 		}
 		logger.debug("Response: {}", message);
-		return response;
-	}
 
+		return (response != null) ? buildChatPayload(response) : null;
+	}
 
 	/**
 	 * Send a message to a user
@@ -90,7 +88,7 @@ public class BotService {
 		}
 
 		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
-		String payload = String.format("payload={\"text\": \"%s\"}", message);
+		String payload = buildChatPayload(message);
 
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
@@ -100,6 +98,19 @@ public class BotService {
 			logger.error("Message '{}' NOT sent to user {}", message, userName);
 			return false;
 		}
+	}
+
+	/*
+	 * PRIVATE
+	 */
+	
+	/**
+	 * Build payload in Synology Chat format
+	 * @param message the message to send
+	 * @return the paylaod
+	 */
+	private String buildChatPayload(String message) {
+		return String.format("payload={\"text\": \"%s\"}", message);
 	}
 
 }
