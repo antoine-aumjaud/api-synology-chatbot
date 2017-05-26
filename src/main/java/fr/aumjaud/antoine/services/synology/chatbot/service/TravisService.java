@@ -8,6 +8,9 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
 import fr.aumjaud.antoine.services.common.http.HttpResponse;
@@ -18,7 +21,7 @@ import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
 
 public class TravisService {
 
-	//private static final Logger logger = LoggerFactory.getLogger(TravisService.class);
+	private static final Logger logger = LoggerFactory.getLogger(TravisService.class);
 
 	private SecurityHelper securityHelper = new SecurityHelper();
 	private HttpHelper httpHelper = new HttpHelper();
@@ -54,6 +57,7 @@ public class TravisService {
 		// Check signature
 		securityHelper.checkSignature(publicKeyStr, payload, signatureB64);
 
+logger.debug(">>", payload);
 		// Parse payload
 		TravisPayload travisPayload = extractTravisPayload(payload);
 
@@ -103,7 +107,7 @@ public class TravisService {
 	String buildTravisMessage(TravisPayload travisPayload) {
 		if (travisPayload.getRepository() == null)
 			throw new WrongRequestException("payload is not well formed", "Payload has null value");
-
+logger.debug("<<< " + travisPayload.getRepository().getUrl());
 		String textMessage = travisPayload.getStatus() == 0 //
 				? "Build success of %1$s" //
 				: "Build <%5$s|%3$s> of %1$s: [%2$s] %4$s";
