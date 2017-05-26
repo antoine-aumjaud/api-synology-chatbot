@@ -1,5 +1,5 @@
 
-package fr.aumjaud.antoine.services.synology.chatbot;
+package fr.aumjaud.antoine.services.synology.chatbot.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -9,36 +9,24 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Properties;
 
-import org.junit.Before;
 import org.junit.Test;
 
-import fr.aumjaud.antoine.services.common.security.NoAccessException;
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
 import fr.aumjaud.antoine.services.synology.chatbot.model.TravisRepository;
 
-public class BotResourceTest {
+public class TravisServiceTest {
 
-	private Properties properties;
-	private BotResource botResource = new BotResource();
-
-	@Before
-	public void init() {
-		properties = new Properties();
-		properties.put("chat-tokens", "");
-		botResource.setConfig(properties);
-	}
+	private TravisService travisService = new TravisService();
 
 	@Test
 	public void getTravisPayload_should_parse_an_docker_webhook_info() throws IOException, URISyntaxException {
 		// Given
-		String msg = new String(
-				Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("travis_webhook.json").toURI())));
+		String msg = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("travis_webhook.json").toURI())));
 
 		// When
-		TravisPayload dpd = botResource.getTravisPayload(msg);
+		TravisPayload dpd = travisService.extractTravisPayload(msg);
 
 		// Then
 		assertNotNull(dpd.getRepository());
@@ -55,37 +43,20 @@ public class BotResourceTest {
 			throws IOException, URISyntaxException {
 		// Given
 		TravisPayload payload = new TravisPayload() {
-			public String getMessage() {
-				return "commit message";
-			};
-
+			public String getMessage() { return "commit message"; };
 			public TravisRepository getRepository() {
 				return new TravisRepository() {
-					public String getName() {
-						return "repo_name";
-					};
-
-					public String getUrl() {
-						return "http://repo_url";
-					};
+					public String getName() { return "repo_name"; };
+					public String getUrl() { return "http://repo_url";};
 				};
 			}
-
-			public String getAuthorName() {
-				return "aa";
-			};
-
-			public int getStatus() {
-				return 0;
-			};
-
-			public String getStatusMessage() {
-				return "status";
-			};
+			public String getAuthorName() { return "aa"; };
+			public int getStatus() { return 0;};
+			public String getStatusMessage() { return "status";};
 		};
 
 		// When
-		String msg = botResource.getTravisMessage(payload);
+		String msg = travisService.buildTravisMessage(payload);
 
 		// Then
 		assertEquals("Build success of repo_name", msg);
@@ -96,37 +67,20 @@ public class BotResourceTest {
 			throws IOException, URISyntaxException {
 		// Given
 		TravisPayload payload = new TravisPayload() {
-			public String getMessage() {
-				return "commit message";
-			};
-
+			public String getMessage() { return "commit message"; };
 			public TravisRepository getRepository() {
 				return new TravisRepository() {
-					public String getName() {
-						return "repo_name";
-					};
-
-					public String getUrl() {
-						return "http://repo_url";
-					};
+					public String getName() { return "repo_name"; };
+					public String getUrl() { return "http://repo_url";};
 				};
 			}
-
-			public String getAuthorName() {
-				return "aa";
-			};
-
-			public int getStatus() {
-				return 1;
-			};
-
-			public String getStatusMessage() {
-				return "status";
-			};
+			public String getAuthorName() { return "aa"; };
+			public int getStatus() { return 1;};
+			public String getStatusMessage() { return "status";};
 		};
 
 		// When
-		String msg = botResource.getTravisMessage(payload);
+		String msg = travisService.buildTravisMessage(payload);
 
 		// Then
 		assertEquals("Build <http://repo_url|status> of repo_name: [aa] commit message", msg);
@@ -139,7 +93,7 @@ public class BotResourceTest {
 		TravisPayload payload = new TravisPayload();
 
 		// When
-		botResource.getTravisMessage(payload);
+		travisService.buildTravisMessage(payload);
 
 		// Then
 		fail("should has thrown an exception");

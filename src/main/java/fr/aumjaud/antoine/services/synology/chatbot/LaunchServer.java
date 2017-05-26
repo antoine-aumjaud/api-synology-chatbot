@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import fr.aumjaud.antoine.services.common.server.SparkImplementation;
 import fr.aumjaud.antoine.services.common.server.SparkLauncher;
+import fr.aumjaud.antoine.services.synology.chatbot.requesthandler.BotResource;
 
 public class LaunchServer {
 
