@@ -57,7 +57,7 @@ public class TravisService {
 		// Check signature
 		securityHelper.checkSignature(publicKeyStr, payload, signatureB64);
 
-logger.debug(">>", payload);
+logger.debug(">>"+ payload);
 		// Parse payload
 		TravisPayload travisPayload = extractTravisPayload(payload);
 
