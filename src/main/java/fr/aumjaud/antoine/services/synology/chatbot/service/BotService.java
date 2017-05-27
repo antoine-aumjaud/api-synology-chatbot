@@ -88,7 +88,7 @@ public class BotService {
 		}
 
 		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
-		String payload = buildChatPayload(message);
+		String payload = "payload=" + buildChatPayload(message);
 
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
@@ -110,7 +110,7 @@ public class BotService {
 	 * @return the paylaod
 	 */
 	private String buildChatPayload(String message) {
-		return String.format("payload={\"text\": \"%s\"}", message);
+		return String.format("{\"text\": \"%s\"}", message);
 	}
 
 }
