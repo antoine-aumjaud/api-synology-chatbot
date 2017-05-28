@@ -52,7 +52,8 @@ public class BotService {
 		if (message.startsWith("echo")) {
 			return "echo from bot";
 		} else if (message.startsWith("pass")) {
-			HttpResponse httpResponse = httpHelper.postData(properties.getProperty("file-search.url"), message.substring("pass".length()));
+			HttpResponse httpResponse = httpHelper.getData(properties.getProperty("file-search.url") 
+					+ message.substring("pass".length()));
 			if (httpResponse != null && httpResponse.getHttpCode() == HttpCode.OK) {
 				response = httpResponse.getContent();
 			} else {
