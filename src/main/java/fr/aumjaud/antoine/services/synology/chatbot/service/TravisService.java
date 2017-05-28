@@ -8,9 +8,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
 import fr.aumjaud.antoine.services.common.http.HttpResponse;
@@ -21,7 +18,7 @@ import fr.aumjaud.antoine.services.synology.chatbot.model.TravisPayload;
 
 public class TravisService {
 
-	private static final Logger logger = LoggerFactory.getLogger(TravisService.class);
+	//private static final Logger logger = LoggerFactory.getLogger(TravisService.class);
 
 	private SecurityHelper securityHelper = new SecurityHelper();
 	private HttpHelper httpHelper = new HttpHelper();

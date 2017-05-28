@@ -59,7 +59,7 @@ public class BotService {
 				logger.warn("Can't get reponse form file-search API");
 			}
 		}
-		logger.debug("Response: {}", message);
+		logger.debug("Response: {}", response);
 
 		return (response != null) ? buildChatPayload(response) : null;
 	}

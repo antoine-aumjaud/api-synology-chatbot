@@ -5,13 +5,13 @@
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/api-synology-chatbot.txt</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/api-synology-chatbot.%d{yyyy-MM-dd}.txt</fileNamePattern>
+            <fileNamePattern>logs/archive/api-synology-chatbot.%d{yyyy-MM-dd}.txt</fileNamePattern>
             <!-- keep 1 days' worth of history -->
             <maxHistory>5</maxHistory>
         </rollingPolicy>
 
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%-14thread] %-5level %logger{45} - %msg%n</pattern>
         </encoder>
     </appender>
 
