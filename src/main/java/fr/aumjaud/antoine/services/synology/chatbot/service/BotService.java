@@ -54,8 +54,7 @@ public class BotService {
 		} else if (message.startsWith("pass ")) {
 			HttpResponse httpResponse = httpHelper.getData(
 					properties.getProperty("file-search.url") + message.substring("pass ".length()),
-					properties.getProperty("file-search.secure-key")
-					);
+					properties.getProperty("file-search.secure-key"));
 			if (httpResponse != null && httpResponse.getHttpCode() == HttpCode.OK) {
 				response = httpResponse.getContent();
 			} else {
@@ -78,9 +77,9 @@ public class BotService {
 		String token = properties.getProperty("token." + userName);
 		if (token == null)
 			throw new WrongRequestException("unknown user", "user doesn't have a token set: " + userName);
-		String targetUrl = properties.getProperty("chat.url");
+		String targetUrl = properties.getProperty("synology-chat.url");
 		if (targetUrl == null)
-			throw new WrongRequestException("missing configuration", "chat.url not defined in configuration");
+			throw new WrongRequestException("missing configuration", "synology-chat.url not defined in configuration");
 
 		// Build target URL
 		targetUrl = String.format(targetUrl, token);
