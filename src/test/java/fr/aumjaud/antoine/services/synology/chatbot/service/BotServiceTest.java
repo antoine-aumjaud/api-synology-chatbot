@@ -21,7 +21,7 @@ public class BotServiceTest {
 	public void buildChatBotResponse_should_parse_an_API_AI_complete_reponse() throws IOException, URISyntaxException {
 		// Given
 		String msg = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("api-ai_complete-response.json").toURI())));
-System.out.println(msg);
+
 		// When
 		ChatBotResponse cbr = botService.buildChatBotResponse(msg);
 
@@ -30,7 +30,8 @@ System.out.println(msg);
 		assertNotNull(cbr.getResult());
         assertFalse(cbr.getResult().isActionIncomplete());
         assertEquals("family-weight-set", cbr.getResult().getAction());
-        assertEquals("xxx", cbr.getResult().getParameters());
+		assertNotNull(cbr.getResult().getParameters());
+        assertEquals("{firstname=Kyllian, g=, kg=10}", cbr.getResult().getParameters().toString());
     }
 
     @Test
@@ -46,7 +47,7 @@ System.out.println(msg);
 		assertNotNull(cbr.getResult());
         assertTrue(cbr.getResult().isActionIncomplete());
         assertNotNull(cbr.getResult().getFulfillment());
-        assertEquals("xxx", cbr.getResult().getFulfillment().getSpeech());
+        assertEquals("Quel est le nombre de kilogrammes de Kyllian", cbr.getResult().getFulfillment().getSpeech());
     }
 
     @Test
@@ -63,6 +64,6 @@ System.out.println(msg);
         assertFalse(cbr.getResult().isActionIncomplete());
         assertTrue(cbr.getResult().getAction().contains("output"));
         assertNotNull(cbr.getResult().getFulfillment());
-        assertEquals("xxx", cbr.getResult().getFulfillment().getSpeech());
+        assertEquals("Moi, pas comprendre !", cbr.getResult().getFulfillment().getSpeech());
     }
 }

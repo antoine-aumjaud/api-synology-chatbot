@@ -4,7 +4,7 @@ apply plugin: 'application'
 
 mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
 version = '0.0.5'
-def apiJavalibVersion = '1.6.1'
+def apiJavalibVersion = '1.6.2'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8

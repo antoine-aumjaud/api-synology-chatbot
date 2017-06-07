@@ -157,7 +157,7 @@ public class BotService {
 		String response;
 		HttpMessage httpChatBotMessage = new HttpMessageBuilder(properties.getProperty("api-ai.url"))
 			.setJsonMessage(buildChatBotPayload(message, userName))
-			.addHeader("Authorization", "Bearer: " + properties.getProperty("api-ai.client.others.token"))
+			.addHeader("Authorization", "Bearer " + properties.getProperty("api-ai.client.others.token"))
 			.build();
 		HttpResponse httpChatBotResponse = httpHelper.postData(httpChatBotMessage);
 		if (httpChatBotResponse.getHttpCode() == HttpCode.OK) {
@@ -173,19 +173,19 @@ public class BotService {
 				//Call the service specified by the bot
 				HttpMessage httpActionMessage = new HttpMessageBuilder(properties.getProperty("api-ai.action." + action + ".url"))
 					.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
-					.setJsonMessage(chatbotResponse.getResult().getParameters())
+					.setJsonMessage(chatbotResponse.getResult().getParameters().toString())
 					.build();
 				HttpResponse httpActionResponse = httpHelper.postData(httpActionMessage);
 				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
 					response = httpActionResponse.getContent();
 				} else {
-					response = action + " return an error";
-					logger.warn("Can't get response form " + action + " API");
+					response = action + " error";
+					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(), httpActionResponse.getContent());
 				}
 			}
 		} else {
 			response = "ChatBot error";
-			logger.warn("Can't get response form AI API");
+			logger.warn("AI API return an error {}: {}", httpChatBotResponse.getHttpCode(), httpChatBotResponse.getContent());
 		}
 		return response;
 	}
