@@ -1,0 +1,12 @@
+
+//finish
+{
+  "result": {
+    "action": "input.unknown;output",
+    "actionIncomplete": false,
+    "parameters": {},
+    "fulfillment": {
+      "speech": "Moi, pas comprendre !"
+    }
+  }
+}

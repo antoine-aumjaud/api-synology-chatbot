@@ -31,6 +31,6 @@ notifications:
     on_sucess: never
   webhooks:
     urls:
-      - https://api-synology-chatbot.aumjaud.fr/send-travis/continuous-delivery
+      - https://api-synology-chatbot.aumjaud.fr/send-travis/continuous-integration
     on_success: always
     on_failure: always

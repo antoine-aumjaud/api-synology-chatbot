@@ -7,8 +7,13 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
+
+import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotResponse;
 import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
+import fr.aumjaud.antoine.services.common.http.HttpMessage;
+import fr.aumjaud.antoine.services.common.http.HttpMessageBuilder;
 import fr.aumjaud.antoine.services.common.http.HttpResponse;
 import fr.aumjaud.antoine.services.common.security.NoAccessException;
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
@@ -16,6 +21,7 @@ import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 public class BotService {
 
 	private static final Logger logger = LoggerFactory.getLogger(BotService.class);
+	private static final Gson GSON = new Gson();
 
 	private HttpHelper httpHelper = new HttpHelper();
 	
@@ -48,22 +54,16 @@ public class BotService {
 		logger.debug("Message received form {}: {}", userName, message);
 
 		// Parse message and build reponse
-		String response = null;
+		String response;
 		if (message.startsWith("echo")) {
-			return "echo from bot";
+			response = echoService();
 		} else if (message.startsWith("pass ")) {
-			HttpResponse httpResponse = httpHelper.getData(
-					properties.getProperty("file-search.url") + message.substring("pass ".length()),
-					properties.getProperty("file-search.secure-key"));
-			if (httpResponse != null && httpResponse.getHttpCode() == HttpCode.OK) {
-				response = httpResponse.getContent();
-			} else {
-				logger.warn("Can't get response form file-search API");
-			}
+			response = passService(message);
+		} else {
+			response = chatBotService(message, userName);
 		}
 		logger.debug("Response: {}", response);
-
-		return (response != null) ? buildChatPayload(response) : null;
+		return buildSynologyChatPayload(response);
 	}
 
 	/**
@@ -90,9 +90,8 @@ public class BotService {
 		}
 
 		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
-		String payload = "payload=" + buildChatPayload(message);
-
-		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
+		String payload = "payload=" + buildSynologyChatPayload(message); //not a json message
+		HttpResponse httpResponse = httpHelper.postData(new HttpMessageBuilder(targetUrl).setMessage(payload).build());
 		if (httpResponse != null) {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
 			return httpResponse.getHttpCode() == HttpCode.OK;
@@ -111,8 +110,87 @@ public class BotService {
 	 * @param message the message to send
 	 * @return the paylaod
 	 */
-	private String buildChatPayload(String message) {
+	private String buildSynologyChatPayload(String message) {
 		return String.format("{\"text\": \"%s\"}", message);
 	}
+	/**
+	 * Build payload for chatbot (API.AI format)
+	 * @param message the message to send
+	 * @param userName the user name of the sender
+	 * @return the paylaod
+	 */
+	private String buildChatBotPayload(String message, String userName) {
+		return String.format("{\"query\": [\"%s\"], \"timezone\": \"Europe/Paris\", \"lang\": \"fr\", \"sessionId\": \"%s\" }", message, userName);
+	}
 
+
+	/**
+	 * Service which reply a static string
+	 */
+	private String echoService() {
+		return "echo from bot";
+	}
+
+	/**
+	 * Service which call the file-search API
+	 * @param message the message sent in the chat by the user
+	 */
+	private String passService(String message) {
+		HttpMessage httpFileMessage = new HttpMessageBuilder(properties.getProperty("file-search.url") + message.substring("pass ".length()))
+			.setSecureKey(properties.getProperty("file-search.secure-key"))
+			.build();
+		HttpResponse httpFileResponse = httpHelper.getData(httpFileMessage);
+		if (httpFileResponse.getHttpCode() == HttpCode.OK) {
+			return httpFileResponse.getContent();
+		} else {
+			logger.warn("Can't get response form file-search API");
+			return "File API error";
+		}
+	}
+
+	/**
+	 * Service which call the AI API and then the service specified by the bot
+	 * @param message the message sent in the chat by the user
+	 * @param userName the user name of the sender
+	 */
+	private String chatBotService(String message, String userName) {
+		String response;
+		HttpMessage httpChatBotMessage = new HttpMessageBuilder(properties.getProperty("api-ai.url"))
+			.setJsonMessage(buildChatBotPayload(message, userName))
+			.addHeader("Authorization", "Bearer: " + properties.getProperty("api-ai.client.others.token"))
+			.build();
+		HttpResponse httpChatBotResponse = httpHelper.postData(httpChatBotMessage);
+		if (httpChatBotResponse.getHttpCode() == HttpCode.OK) {
+			String jsonResponse  = httpChatBotResponse.getContent();
+			logger.debug("Reponse from API.AI: '{}'", jsonResponse);
+			ChatBotResponse chatbotResponse = buildChatBotResponse(jsonResponse);
+			String action = chatbotResponse.getResult().getAction();
+			//If action not completed, or output forced
+			if(action.contains(properties.getProperty("api-ai.action.output")) || chatbotResponse.getResult().isActionIncomplete()) {
+				response =  chatbotResponse.getResult().getFulfillment().getSpeech();
+			}
+			else { //Action completed
+				//Call the service specified by the bot
+				HttpMessage httpActionMessage = new HttpMessageBuilder(properties.getProperty("api-ai.action." + action + ".url"))
+					.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
+					.setJsonMessage(chatbotResponse.getResult().getParameters())
+					.build();
+				HttpResponse httpActionResponse = httpHelper.postData(httpActionMessage);
+				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
+					response = httpActionResponse.getContent();
+				} else {
+					response = action + " return an error";
+					logger.warn("Can't get response form " + action + " API");
+				}
+			}
+		} else {
+			response = "ChatBot error";
+			logger.warn("Can't get response form AI API");
+		}
+		return response;
+	}
+
+	/*package for test*/ ChatBotResponse buildChatBotResponse(String jsonResponse) {
+		return GSON.fromJson(jsonResponse, ChatBotResponse.class);
+	}
 }

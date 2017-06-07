@@ -1,0 +1,14 @@
+{
+  "result": {
+    "action": "family-weight-set",
+    "actionIncomplete": false,
+    "parameters": {
+      "firstname": "Kyllian",
+      "g": "",
+      "kg": "10"
+    },
+    "fulfillment": {
+      "speech": ""
+    }
+  }
+}

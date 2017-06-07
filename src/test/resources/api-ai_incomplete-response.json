@@ -1,0 +1,14 @@
+{
+  "result": {
+    "action": "family-weight-set",
+    "actionIncomplete": true,
+    "parameters": {
+      "firstname": "Kyllian",
+      "g": "",
+      "kg": ""
+    },
+    "fulfillment": {
+      "speech": "Quel est le nombre de kilogrammes de Kyllian"
+    }
+  }
+}
