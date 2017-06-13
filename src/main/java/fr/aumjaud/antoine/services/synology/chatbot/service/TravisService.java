@@ -10,7 +10,6 @@ import com.google.gson.GsonBuilder;
 
 import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
-import fr.aumjaud.antoine.services.common.http.HttpMessageBuilder;
 import fr.aumjaud.antoine.services.common.http.HttpResponse;
 import fr.aumjaud.antoine.services.common.security.NoAccessException;
 import fr.aumjaud.antoine.services.common.security.SecurityHelper;
@@ -74,7 +73,7 @@ public class TravisService {
 	 */
 	private String getTravisPublicKey() {
 		//Load public key form Travis URL
-		HttpResponse responsePublicKey = httpHelper.getData(new HttpMessageBuilder(properties.getProperty("travis.public-key.url")).build());
+		HttpResponse responsePublicKey = httpHelper.getData(properties.getProperty("travis.public-key.url"));
 		if (responsePublicKey.getHttpCode() != HttpCode.OK)
 			throw new NoAccessException("can't get public key", "Travis Public key is not accessible");
 

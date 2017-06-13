@@ -91,7 +91,7 @@ public class BotService {
 
 		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
 		String payload = "payload=" + buildSynologyChatPayload(message); //not a json message
-		HttpResponse httpResponse = httpHelper.postData(new HttpMessageBuilder(targetUrl).setMessage(payload).build());
+		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
 			return httpResponse.getHttpCode() == HttpCode.OK;
@@ -126,6 +126,7 @@ public class BotService {
 
 	/**
 	 * Service which reply a static string
+	 * @return the string to send to the chat
 	 */
 	private String echoService() {
 		return "echo from bot";
@@ -134,17 +135,21 @@ public class BotService {
 	/**
 	 * Service which call the file-search API
 	 * @param message the message sent in the chat by the user
+	 * @return the string to send to the chat
 	 */
 	private String passService(String message) {
-		HttpMessage httpFileMessage = new HttpMessageBuilder(properties.getProperty("file-search.url") + message.substring("pass ".length()))
+		String fileName = message.substring("pass ".length());
+		HttpMessage httpFileMessage = new HttpMessageBuilder(properties.getProperty("file-search.url") + fileName)
 			.setSecureKey(properties.getProperty("file-search.secure-key"))
 			.build();
 		HttpResponse httpFileResponse = httpHelper.getData(httpFileMessage);
 		if (httpFileResponse.getHttpCode() == HttpCode.OK) {
 			return httpFileResponse.getContent();
+		} else if (httpFileResponse.getHttpCode() == HttpCode.NOT_FOUND) {
+			return "File-API: Information not found in file " + fileName;
 		} else {
 			logger.warn("Can't get response form file-search API");
-			return "File API error";
+			return "File-API: error";
 		}
 	}
 
@@ -152,6 +157,7 @@ public class BotService {
 	 * Service which call the AI API and then the service specified by the bot
 	 * @param message the message sent in the chat by the user
 	 * @param userName the user name of the sender
+	 * @return the string to send to the chat
 	 */
 	private String chatBotService(String message, String userName) {
 		String response;
@@ -173,7 +179,7 @@ public class BotService {
 				//Call the service specified by the bot
 				HttpMessage httpActionMessage = new HttpMessageBuilder(properties.getProperty("api-ai.action." + action + ".url"))
 					.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
-					.setJsonMessage(chatbotResponse.getResult().getParameters().toString())
+					.setJsonMessage(chatbotResponse.getResult().getJsonParameters())
 					.build();
 				HttpResponse httpActionResponse = httpHelper.postData(httpActionMessage);
 				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
@@ -184,13 +190,17 @@ public class BotService {
 				}
 			}
 		} else {
-			response = "ChatBot error";
-			logger.warn("AI API return an error {}: {}", httpChatBotResponse.getHttpCode(), httpChatBotResponse.getContent());
+			response = "ChatBot-API: error";
+			logger.warn("AI-API return an error {}: {}", httpChatBotResponse.getHttpCode(), httpChatBotResponse.getContent());
 		}
 		return response;
 	}
 
 	/*package for test*/ ChatBotResponse buildChatBotResponse(String jsonResponse) {
-		return GSON.fromJson(jsonResponse, ChatBotResponse.class);
+		ChatBotResponse cbr = GSON.fromJson(jsonResponse, ChatBotResponse.class);
+		if(cbr.getResult() != null && cbr.getResult().getParameters() != null) {
+			cbr.getResult().setJsonParameters(GSON.toJson(cbr.getResult().getParameters()));
+		}
+		return cbr;
 	}
 }

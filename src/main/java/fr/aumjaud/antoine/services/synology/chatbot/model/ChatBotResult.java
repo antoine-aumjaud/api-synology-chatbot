@@ -4,6 +4,7 @@ public class ChatBotResult {
     private String action;
     private boolean actionIncomplete;
     private Object parameters;
+    private String jsonParameters;
 
     private ChatBotFulfillment fulfillment;
 
@@ -13,10 +14,16 @@ public class ChatBotResult {
     public boolean isActionIncomplete() {
         return actionIncomplete;
     }
+    public ChatBotFulfillment getFulfillment() {
+        return fulfillment;
+    }
     public Object getParameters() {
         return parameters;
     }
-    public ChatBotFulfillment getFulfillment() {
-        return fulfillment;
+    public String getJsonParameters() {
+        return jsonParameters;
+    }
+    public void setJsonParameters(String jsonParameters) {
+        this.jsonParameters = jsonParameters;
     }
 }

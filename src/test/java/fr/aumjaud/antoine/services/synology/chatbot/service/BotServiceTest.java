@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
 import org.junit.Test;
 
 import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotResponse;
@@ -31,7 +30,7 @@ public class BotServiceTest {
         assertFalse(cbr.getResult().isActionIncomplete());
         assertEquals("family-weight-set", cbr.getResult().getAction());
 		assertNotNull(cbr.getResult().getParameters());
-        assertEquals("{firstname=Kyllian, g=, kg=10}", cbr.getResult().getParameters().toString());
+        assertEquals("{\"firstname\":\"Kyllian\",\"g\":\"\",\"kg\":\"10\"}", cbr.getResult().getJsonParameters());
     }
 
     @Test
