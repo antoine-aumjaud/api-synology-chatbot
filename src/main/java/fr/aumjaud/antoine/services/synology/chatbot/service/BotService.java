@@ -177,13 +177,20 @@ public class BotService {
 			}
 			else { //Action completed
 				//Call the service specified by the bot
+				logger.debug("Call service: {}", action);
 				HttpMessage httpActionMessage = new HttpMessageBuilder(properties.getProperty("api-ai.action." + action + ".url"))
 					.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
 					.setJsonMessage(chatbotResponse.getResult().getJsonParameters())
 					.build();
-				HttpResponse httpActionResponse = httpHelper.postData(httpActionMessage);
+				HttpResponse httpActionResponse = (action.endsWith("-get")) 
+					? httpHelper.getData(httpActionMessage)
+					: httpHelper.postData(httpActionMessage);
 				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
 					response = httpActionResponse.getContent();
+					logger.debug("Reponse from service {}: '{}'", action, response);
+					if(response.length() == 0) { // if no response, take API response
+						response = chatbotResponse.getResult().getFulfillment().getSpeech();
+					}
 				} else {
 					response = action + " error";
 					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(), httpActionResponse.getContent());
