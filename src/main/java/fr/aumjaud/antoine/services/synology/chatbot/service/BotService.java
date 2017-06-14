@@ -179,6 +179,7 @@ public class BotService {
 				//Call the service specified by the bot
 				logger.debug("Call service: {}", action);
 				HttpMessage httpActionMessage = new HttpMessageBuilder(properties.getProperty("api-ai.action." + action + ".url"))
+					.addHeader("Accept", "text/plain")
 					.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
 					.setJsonMessage(chatbotResponse.getResult().getJsonParameters())
 					.build();
