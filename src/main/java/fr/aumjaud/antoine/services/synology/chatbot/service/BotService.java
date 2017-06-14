@@ -111,6 +111,7 @@ public class BotService {
 	 * @return the paylaod
 	 */
 	private String buildSynologyChatPayload(String message) {
+		if(message != null) message = message.replace("\n", "\\n");
 		return String.format("{\"text\": \"%s\"}", message);
 	}
 	/**
