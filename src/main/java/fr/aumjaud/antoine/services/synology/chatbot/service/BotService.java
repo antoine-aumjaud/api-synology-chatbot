@@ -62,7 +62,7 @@ public class BotService {
 		} else {
 			response = chatBotService(message, userName);
 		}
-		logger.debug("Response: {}", response);
+		logger.debug("Response to Chat: {}", response);
 		return buildSynologyChatPayload(response);
 	}
 
@@ -169,7 +169,7 @@ public class BotService {
 		HttpResponse httpChatBotResponse = httpHelper.postData(httpChatBotMessage);
 		if (httpChatBotResponse.getHttpCode() == HttpCode.OK) {
 			String jsonResponse  = httpChatBotResponse.getContent();
-			logger.debug("Reponse from API.AI: '{}'", jsonResponse);
+			logger.debug("Response from API.AI: '{}'", jsonResponse);
 			ChatBotResponse chatbotResponse = buildChatBotResponse(jsonResponse);
 			String action = chatbotResponse.getResult().getAction();
 			//If action not completed, or output forced
@@ -189,7 +189,7 @@ public class BotService {
 					: httpHelper.postData(httpActionMessage);
 				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
 					response = httpActionResponse.getContent();
-					logger.debug("Reponse from service {}: '{}'", action, response);
+					logger.debug("Response from service {}: '{}'", action, response);
 					if(response.length() == 0) { // if no response, take API response
 						response = chatbotResponse.getResult().getFulfillment().getSpeech();
 					}
