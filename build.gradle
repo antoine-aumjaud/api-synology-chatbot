@@ -3,8 +3,8 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
-version = '1.0.0'
-def apiJavalibVersion = '1.6.3'
+version = '1.1.0'
+def apiJavalibVersion = '1.7.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -39,7 +39,8 @@ dependencies {
 processResources {
     filter org.apache.tools.ant.filters.ReplaceTokens, tokens: [
         "application.name": project.property("name"),
-        "application.version": project.property("version")
+        "application.version": project.property("version"),
+        "build.date": new Date().format('yyyy-MM-dd HH:mm:ss')
     ]
 }
 
