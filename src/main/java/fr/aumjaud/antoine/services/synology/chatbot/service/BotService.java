@@ -2,6 +2,7 @@ package fr.aumjaud.antoine.services.synology.chatbot.service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ public class BotService {
 	private static final Gson GSON = new Gson();
 
 	private HttpHelper httpHelper = new HttpHelper();
-	
+
 	private Properties properties;
 	private List<String> validTokens;
 
@@ -104,16 +105,17 @@ public class BotService {
 	/*
 	 * PRIVATE
 	 */
-	
+
 	/**
 	 * Build payload in Synology Chat format
 	 * @param message the message to send
 	 * @return the paylaod
 	 */
 	private String buildSynologyChatPayload(String message) {
-		if(message != null) message = message.replace("\n", "\\n");
+		if (message != null) message = message.replace("\n", "\\n");
 		return String.format("{\"text\": \"%s\"}", message);
 	}
+
 	/**
 	 * Build payload for chatbot (API.AI format)
 	 * @param message the message to send
@@ -123,7 +125,6 @@ public class BotService {
 	private String buildChatBotPayload(String message, String userName) {
 		return String.format("{\"query\": [\"%s\"], \"timezone\": \"Europe/Paris\", \"lang\": \"fr\", \"sessionId\": \"%s\" }", message, userName);
 	}
-
 
 	/**
 	 * Service which reply a static string
@@ -141,8 +142,8 @@ public class BotService {
 	private String passService(String message) {
 		String fileName = message.substring("pass ".length());
 		HttpMessage httpFileMessage = new HttpMessageBuilder(properties.getProperty("file-search.url") + fileName)
-			.setSecureKey(properties.getProperty("file-search.secure-key"))
-			.build();
+				.setSecureKey(properties.getProperty("file-search.secure-key")) //
+				.build();
 		HttpResponse httpFileResponse = httpHelper.getData(httpFileMessage);
 		if (httpFileResponse.getHttpCode() == HttpCode.OK) {
 			return httpFileResponse.getContent();
@@ -163,53 +164,65 @@ public class BotService {
 	private String chatBotService(String message, String userName) {
 		String response;
 		HttpMessage httpChatBotMessage = new HttpMessageBuilder(properties.getProperty("api-ai.url"))
-			.setJsonMessage(buildChatBotPayload(message, userName))
-			.addHeader("Authorization", "Bearer " + properties.getProperty("api-ai.client.others.token"))
-			.build();
+				.setJsonMessage(buildChatBotPayload(message, userName))
+				.addHeader("Authorization", "Bearer " + properties.getProperty("api-ai.client.others.token")).build();
 		HttpResponse httpChatBotResponse = httpHelper.postData(httpChatBotMessage);
 		if (httpChatBotResponse.getHttpCode() == HttpCode.OK) {
-			String jsonResponse  = httpChatBotResponse.getContent();
+			String jsonResponse = httpChatBotResponse.getContent();
 			logger.debug("Response from API.AI: '{}'", jsonResponse);
 			ChatBotResponse chatbotResponse = buildChatBotResponse(jsonResponse);
 			String action = chatbotResponse.getResult().getAction();
 			//If action not completed, or output forced
-			if(action.contains(properties.getProperty("api-ai.action.output")) || chatbotResponse.getResult().isActionIncomplete()) {
-				response =  chatbotResponse.getResult().getFulfillment().getSpeech();
-			}
-			else { //Action completed
-				//Call the service specified by the bot
+			if (action.contains(properties.getProperty("api-ai.action.output"))
+					|| chatbotResponse.getResult().isActionIncomplete()) {
+				response = chatbotResponse.getResult().getFulfillment().getSpeech();
+			} else { //Action completed
+						//Call the service specified by the bot
 				logger.debug("Call service: {}", action);
-				HttpMessage httpActionMessage = new HttpMessageBuilder(properties.getProperty("api-ai.action." + action + ".url"))
-					.addHeader("Accept", "text/plain")
-					.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
-					.setJsonMessage(chatbotResponse.getResult().getJsonParameters())
-					.build();
-				HttpResponse httpActionResponse = (action.endsWith("-get")) 
-					? httpHelper.getData(httpActionMessage)
-					: httpHelper.postData(httpActionMessage);
+				String url = buildUrlWithValuedParameters(properties.getProperty("api-ai.action." + action + ".url"), chatbotResponse);
+				HttpMessage httpActionMessage = new HttpMessageBuilder(url) //
+						.addHeader("Accept", "text/plain")
+						.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
+						.setJsonMessage(chatbotResponse.getResult().getJsonParameters()).build();
+				HttpResponse httpActionResponse = (action.endsWith("-get")) //
+						? httpHelper.getData(httpActionMessage)
+						: httpHelper.postData(httpActionMessage);
 				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
 					response = httpActionResponse.getContent();
 					logger.debug("Response from service {}: '{}'", action, response);
-					if(response.length() == 0) { // if no response, take API response
+					if (response.length() == 0) { // if no response, take API response
 						response = chatbotResponse.getResult().getFulfillment().getSpeech();
 					}
 				} else {
 					response = action + " error";
-					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(), httpActionResponse.getContent());
+					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(),
+							httpActionResponse.getContent());
 				}
 			}
 		} else {
 			response = "ChatBot-API: error";
-			logger.warn("AI-API return an error {}: {}", httpChatBotResponse.getHttpCode(), httpChatBotResponse.getContent());
+			logger.warn("AI-API return an error {}: {}", httpChatBotResponse.getHttpCode(),
+					httpChatBotResponse.getContent());
 		}
 		return response;
 	}
 
 	/*package for test*/ ChatBotResponse buildChatBotResponse(String jsonResponse) {
 		ChatBotResponse cbr = GSON.fromJson(jsonResponse, ChatBotResponse.class);
-		if(cbr.getResult() != null && cbr.getResult().getParameters() != null) {
+		if (cbr.getResult() != null && cbr.getResult().getParameters() != null) {
 			cbr.getResult().setJsonParameters(GSON.toJson(cbr.getResult().getParameters()));
 		}
 		return cbr;
+	}
+
+	private String buildUrlWithValuedParameters(String url, ChatBotResponse chatbotResponse) {
+		if (chatbotResponse.getResult() != null && chatbotResponse.getResult().getParameters() != null) {
+			for (Map.Entry<String, String> entry : chatbotResponse.getResult().getParameters().entrySet()) {
+				if (url.contains(":" + entry.getKey())) {
+					url = url.replace(":" + entry.getKey(), entry.getValue());
+				}
+			}
+		}
+		return url;
 	}
 }
