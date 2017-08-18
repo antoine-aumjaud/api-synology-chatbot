@@ -31,7 +31,7 @@ public class LaunchServer {
 				post("/send-travis/:user", botResource::sendTravisPayload); //not secure, use Travis signature 
 				path(securePath, () -> {
 					post("/receive/", "application/json", botResource::receiveMessage); //let last "/" (bug on syno chat integration)
-					post("/send-message/:user", botResource::sendBody);
+					post("/send-message/:user", botResource::sendMessage);
 				});
 			}
 		});

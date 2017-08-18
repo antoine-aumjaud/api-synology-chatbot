@@ -71,8 +71,8 @@ public class BotResource {
 	/**
 	 * Send a message in the request body
 	 */
-	public String sendBody(Request request, Response response) {
-		String message = request.body();
+	public String sendMessage(Request request, Response response) {
+		String message = request.queryParams("message");
 		if (message == null || message.length() == 0)
 			throw new WrongRequestException("message is null", "Message to send is not present");
 
