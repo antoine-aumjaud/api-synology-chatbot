@@ -95,7 +95,8 @@ public class BotService {
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
-			return httpResponse.getHttpCode() == HttpCode.OK;
+			return httpResponse.getHttpCode() == HttpCode.OK 
+				&& !httpResponse.getContent().contains("error");
 		} else {
 			logger.error("Message '{}' NOT sent to user {}", message, userName);
 			return false;
