@@ -3,13 +3,17 @@ package fr.aumjaud.antoine.services.synology.chatbot.requesthandler;
 import java.security.InvalidKeyException;
 import java.util.Properties;
 
+import com.google.gson.Gson;
+
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
+import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotMessage;
 import fr.aumjaud.antoine.services.synology.chatbot.service.BotService;
 import fr.aumjaud.antoine.services.synology.chatbot.service.TravisService;
 import spark.Request;
 import spark.Response;
 
 public class BotResource {
+	private static final Gson GSON = new Gson();
 
 	private BotService botService = new BotService();
 	private TravisService travisService = new TravisService();
@@ -72,7 +76,10 @@ public class BotResource {
 	 * Send a message in the request body
 	 */
 	public String sendMessage(Request request, Response response) {
-		String message = request.queryParams("message");
+		ChatBotMessage chatBotMessage = getChatBotMessage(request);
+		if (chatBotMessage == null)
+			throw new WrongRequestException("message has not a json format", "Message to send has a wrong format");
+		String message = chatBotMessage.getMessage();
 		if (message == null || message.length() == 0)
 			throw new WrongRequestException("message is null", "Message to send is not present");
 
@@ -104,4 +111,12 @@ public class BotResource {
 		}
 	}
 
+	/**
+	 * Get message form request
+	 * @param request
+	 * @return the message
+	 */
+	ChatBotMessage getChatBotMessage(Request request) {
+		return GSON.fromJson(request.body(), ChatBotMessage.class);
+	}
 }
