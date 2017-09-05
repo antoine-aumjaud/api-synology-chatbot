@@ -58,8 +58,6 @@ public class BotService {
 		String response;
 		if (message.startsWith("echo")) {
 			response = echoService();
-		} else if (message.startsWith("pass ")) {
-			response = passService(message);
 		} else {
 			response = chatBotService(message, userName);
 		}
@@ -133,27 +131,6 @@ public class BotService {
 	 */
 	private String echoService() {
 		return "echo from bot";
-	}
-
-	/**
-	 * Service which call the file-search API
-	 * @param message the message sent in the chat by the user
-	 * @return the string to send to the chat
-	 */
-	private String passService(String message) {
-		String fileName = message.substring("pass ".length());
-		HttpMessage httpFileMessage = new HttpMessageBuilder(properties.getProperty("file-search.url") + fileName)
-				.setSecureKey(properties.getProperty("file-search.secure-key")) //
-				.build();
-		HttpResponse httpFileResponse = httpHelper.getData(httpFileMessage);
-		if (httpFileResponse.getHttpCode() == HttpCode.OK) {
-			return httpFileResponse.getContent();
-		} else if (httpFileResponse.getHttpCode() == HttpCode.NOT_FOUND) {
-			return "File-API: Information not found in file " + fileName;
-		} else {
-			logger.warn("Can't get response form file-search API");
-			return "File-API: error";
-		}
 	}
 
 	/**
