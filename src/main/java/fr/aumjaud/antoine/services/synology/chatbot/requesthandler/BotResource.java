@@ -29,7 +29,7 @@ public class BotResource {
 	}
 
 	/**
-	 * Receive a message
+	 * Receive a message from chat input
 	 */
 	public String receiveMessage(Request request, Response response) {
 
@@ -42,6 +42,10 @@ public class BotResource {
 		if (userName == null) {
 			throw new WrongRequestException("missing username", "No username defined");
 		}
+		String channelId = request.queryParams("channel_id");
+		if (channelId == null) {
+			throw new WrongRequestException("missing channelId", "No channel Id defined");
+		}
 
 		// Read message
 		String message = request.queryParams("text");
@@ -50,7 +54,7 @@ public class BotResource {
 		}
 
 		// Call service
-		return botService.receiveMessage(userToken, userName, message);
+		return botService.receiveMessage(channelId, userToken, userName, message);
 	}
 
 	/**
@@ -73,7 +77,7 @@ public class BotResource {
 	}
 
 	/**
-	 * Send a message in the request body
+	 * Send the message in the request body
 	 */
 	public String sendMessage(Request request, Response response) {
 		ChatBotMessage chatBotMessage = getChatBotMessage(request);

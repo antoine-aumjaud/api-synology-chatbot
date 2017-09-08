@@ -41,25 +41,30 @@ public class BotService {
 
 	/**
 	 * Receive message treatment
+	 * @param channelId the channel Id which send the message
 	 * @param userToken the token send by chat integration
 	 * @param userName the user which sent the message
 	 * @param message the message sent
 	 * @return the response to send to the client
 	 */
-	public String receiveMessage(String userToken, String userName, String message) {
+	public String receiveMessage(String channelId, String userToken, String userName, String message) {
 		// Check secure token
 		if (!validTokens.contains(userToken)) {
 			throw new NoAccessException("unknown token", "Unknown Tocken: " + userToken);
 		}
 
-		logger.debug("Message received form {}: {}", userName, message);
+		logger.debug("Message received on channelId {} form {}: {}", channelId, userName, message);
 
 		// Parse message and build reponse
 		String response;
 		if (message.startsWith("echo")) {
 			response = echoService();
 		} else {
-			response = chatBotService(message, userName);
+			String agentToken = properties.getProperty("api-ai.client." + channelId + ".token");
+			if(agentToken == null) {
+				agentToken = properties.getProperty("api-ai.client.others.token");
+			}
+			response = chatBotService(agentToken, message, userName);
 		}
 		logger.debug("Response to Chat: {}", response);
 		return buildSynologyChatPayload(response);
@@ -135,15 +140,16 @@ public class BotService {
 
 	/**
 	 * Service which call the AI API and then the service specified by the bot
+	 * @param agentToken the token to identify the agent
 	 * @param message the message sent in the chat by the user
 	 * @param userName the user name of the sender
 	 * @return the string to send to the chat
 	 */
-	private String chatBotService(String message, String userName) {
+	private String chatBotService(String agentToken, String message, String userName) {
 		String response;
 		HttpMessage httpChatBotMessage = new HttpMessageBuilder(properties.getProperty("api-ai.url"))
 				.setJsonMessage(buildChatBotPayload(message, userName))
-				.addHeader("Authorization", "Bearer " + properties.getProperty("api-ai.client.others.token")).build();
+				.addHeader("Authorization", "Bearer " + agentToken).build();
 		HttpResponse httpChatBotResponse = httpHelper.postData(httpChatBotMessage);
 		if (httpChatBotResponse.getHttpCode() == HttpCode.OK) {
 			String jsonResponse = httpChatBotResponse.getContent();
