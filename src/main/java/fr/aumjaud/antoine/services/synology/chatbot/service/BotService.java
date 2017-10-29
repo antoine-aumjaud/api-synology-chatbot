@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,7 +137,7 @@ public class BotService {
 	 * @return the string to send to the chat
 	 */
 	private String echoService() {
-		return "echo from bot";
+		return "echo from bot service";
 	}
 
 	/**
@@ -156,14 +158,16 @@ public class BotService {
 			logger.debug("Response from API.AI: '{}'", jsonResponse);
 			ChatBotResponse chatbotResponse = buildChatBotResponse(jsonResponse);
 			String action = chatbotResponse.getResult().getAction();
+			String botResponse = chatbotResponse.getResult().getFulfillment().getSpeech();
 			//If action not completed, or output forced
 			if (action.contains(properties.getProperty("api-ai.action.output"))
 					|| chatbotResponse.getResult().isActionIncomplete()) {
-				response = chatbotResponse.getResult().getFulfillment().getSpeech();
+				response = botResponse;
 			} else { //Action completed
 						//Call the service specified by the bot
 				logger.debug("Call service: {}", action);
 				String url = buildUrlWithValuedParameters(properties.getProperty("api-ai.action." + action + ".url"), chatbotResponse);
+				String outputType = chatbotResponse.getResult().getParameters().get("outputType");
 				HttpMessage httpActionMessage = new HttpMessageBuilder(url) //
 						.addHeader("Accept", "text/plain")
 						.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
@@ -172,19 +176,39 @@ public class BotService {
 						? httpHelper.getData(httpActionMessage)
 						: httpHelper.postData(httpActionMessage);
 				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
-					response = httpActionResponse.getContent();
-					logger.debug("Response from service {}: '{}'", action, response);
-					if (response.length() == 0) { // if no response, take API response
-						response = chatbotResponse.getResult().getFulfillment().getSpeech();
-					}
+					String serviceResponse = httpActionResponse.getContent();
+					logger.debug("Response from service {}: '{}'", action, serviceResponse);
+					
+					//manage response
+					if(outputType == null) outputType = "service-message";
+					switch(outputType) {
+						case "service-message": 
+							response = (serviceResponse.length() == 0) ? // if no response, take API response
+								botResponse : serviceResponse;
+							break;
+						case "bot-message": 
+							response = botResponse;
+							break;
+						case "bot-text-template": 
+							response = fillTextTemplate(botResponse, serviceResponse);
+							break;
+						case "bot-json-template": 
+							response = fillJsonTemplate(botResponse, serviceResponse);
+							break;
+						default:
+							response = "ChatBot-API error";
+							logger.error("Not managed outputType '{}'' for action: {}", outputType, action);
+							break;
+						}
+										
 				} else {
-					response = action + " error";
+					response = "Service " + action + " error";
 					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(),
 							httpActionResponse.getContent());
 				}
 			}
 		} else {
-			response = "ChatBot-API: error";
+			response = "ChatBot-API error";
 			logger.warn("AI-API return an error {}: {}", httpChatBotResponse.getHttpCode(),
 					httpChatBotResponse.getContent());
 		}
@@ -208,5 +232,25 @@ public class BotService {
 			}
 		}
 		return url;
+	}
+
+	/* package for test*/ String fillTextTemplate(String template, String value) {
+		return String.format(template, value);
+	}
+	
+	private Pattern patternTemplate = Pattern.compile("\\$\\{(\\w+)\\}");
+	/* package for test*/ String fillJsonTemplate(String template, String jsonValue) {
+		String ret = template;
+		Matcher templateMatcher = patternTemplate.matcher(template);
+		while (templateMatcher.find()) {
+			String token = templateMatcher.group(1);
+			Pattern valueTemplate = Pattern.compile("\"" + token + "\"\\s*:\\s*\"(.*)\"");
+			Matcher valueMatcher = valueTemplate.matcher(jsonValue);
+			if(valueMatcher.find()) {
+				ret = ret.replace("${" + token + "}", valueMatcher.group(1)); 
+			}
+		}
+		//TODO prefer use jsonpath 
+		return ret;
 	}
 }

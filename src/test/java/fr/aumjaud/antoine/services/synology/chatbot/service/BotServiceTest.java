@@ -64,5 +64,33 @@ public class BotServiceTest {
         assertTrue(cbr.getResult().getAction().contains("output"));
         assertNotNull(cbr.getResult().getFulfillment());
         assertEquals("Moi, pas comprendre !", cbr.getResult().getFulfillment().getSpeech());
-    }
+	}
+	
+	@Test 
+	public void fillTextTemplate_should_replace_field_by_value() {
+		// Given
+		String template = "hi %s, message is OK";
+		String value = "aa";
+		
+		// When
+		String ret = botService.fillTextTemplate(template, value);
+
+		// Then
+		assertNotNull(ret);
+		assertEquals("hi aa, message is OK", ret);
+	}
+
+	@Test 
+	public void fillJsonTemplate_should_replace_field_by_value() {
+		// Given
+		String template = "hi ${name}, message is OK";
+		String value = "{\"name\": \"aa\"}";
+		 
+		// When
+		String ret = botService.fillJsonTemplate(template, value);
+
+		// Then
+		assertNotNull(ret);
+		assertEquals("hi aa, message is OK", ret);
+	}
 }
