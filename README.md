@@ -44,10 +44,10 @@ This token is retrieved on the synology chat when you add an incoming integratio
 
 
 ```ini
-#services
+#synology chat url
 synology-chat.url=xxx
 ```
-The URL of the incomming integration, for my DS it is : https://admin.aumjaud.fr/webapi/entry.cgi?api=SYNO.Chat.External&method=incoming&version=1&token="%s
+The URL of the incomming integration, for my DS it is : https://admin.aumjaud.fr/webapi/entry.cgi?api=SYNO.Chat.External&method=incoming&version=1&token="%s"
 the last %s is replaced by the token defined just before 
 
 ```ini
