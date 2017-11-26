@@ -226,8 +226,8 @@ public class BotService {
 	}
 
 	private String buildUrlWithValuedParameters(String url, ChatBotResponse chatbotResponse) {
-		if (chatbotResponse.getResult() != null && chatbotResponse.getResult().getParameters() != null) {
-			for (Map.Entry<String, String> entry : chatbotResponse.getResult().getParameters().entrySet()) {
+		if (chatbotResponse.getResult() != null && chatbotResponse.getResult().getAllParameters() != null) {
+			for (Map.Entry<String, String> entry : chatbotResponse.getResult().getAllParameters().entrySet()) {
 				if (url.contains(":" + entry.getKey())) {
 					url = url.replace(":" + entry.getKey(), entry.getValue());
 				}
