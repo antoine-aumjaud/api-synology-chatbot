@@ -199,8 +199,8 @@ public class BotService {
 							response = fillJsonTemplate(botResponse, serviceResponse);
 							break;
 						default:
-							response = "ChatBot-API error";
-							logger.error("Not managed outputType '{}'' for action: {}", outputType, action);
+							response = "ChatBot-API error (output management)";
+							logger.error("Not managed outputType '{}' for action: {}", outputType, action);
 							break;
 						}
 				} else {
@@ -210,7 +210,7 @@ public class BotService {
 				}
 			}
 		} else {
-			response = "ChatBot-API error";
+			response = "ChatBot-API error (API.AI error)";
 			logger.warn("AI-API return an error {}: {}", httpChatBotResponse.getHttpCode(),
 					httpChatBotResponse.getContent());
 		}
