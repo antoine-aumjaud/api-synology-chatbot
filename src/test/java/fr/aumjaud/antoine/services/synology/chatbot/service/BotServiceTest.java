@@ -30,9 +30,27 @@ public class BotServiceTest {
         assertFalse(cbr.getResult().isActionIncomplete());
         assertEquals("family-weight-set", cbr.getResult().getAction());
 		assertNotNull(cbr.getResult().getParameters());
-        assertEquals("{\"firstname\":\"Kyllian\",\"g\":\"\",\"kg\":\"10\"}", cbr.getResult().getJsonParameters());
+        assertEquals("{\"firstname\":\"Kyllian\",\"kg\":\"10\",\"g\":\"\"}", cbr.getResult().getJsonAllParameters());
     }
 
+
+	@Test
+	public void buildChatBotResponse_with_contexts_should_parse_an_API_AI_complete_reponse() throws IOException, URISyntaxException {
+		// Given
+		String msg = new String(Files.readAllBytes(Paths.get(getClass().getClassLoader().getResource("api-ai_complete-response-with-context.json").toURI())));
+
+		// When
+		ChatBotResponse cbr = botService.buildChatBotResponse(msg);
+
+		// Then
+		assertNotNull(cbr);
+		assertNotNull(cbr.getResult());
+        assertFalse(cbr.getResult().isActionIncomplete());
+        assertEquals("family-weight-set", cbr.getResult().getAction());
+		assertNotNull(cbr.getResult().getContextsParameters());
+        assertEquals("{\"p1\":\"v1\",\"p2\":\"v2\",\"pc2\":\"vc2\",\"pc1\":\"vc1\"}", cbr.getResult().getJsonAllParameters());
+	}
+	
     @Test
     public void buildChatBotResponse_should_parse_an_API_AI_incomplete_reponse() throws IOException, URISyntaxException {
 		// Given

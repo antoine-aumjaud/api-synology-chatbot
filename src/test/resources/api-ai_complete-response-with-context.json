@@ -1,0 +1,23 @@
+{
+  "result": {
+    "action": "family-weight-set",
+    "actionIncomplete": false,
+    "parameters": {
+      "p1": "v1",
+      "p2": "v2"
+    },
+    "contexts": [
+      {
+      "name": "c-followup",
+      "parameters": {
+        "pc1": "vc1",
+        "pc2": "vc2"
+      },
+      "lifespan": 1
+      }
+    ],
+    "fulfillment": {
+      "speech": ""
+    }
+  }
+}

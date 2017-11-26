@@ -171,7 +171,7 @@ public class BotService {
 				HttpMessage httpActionMessage = new HttpMessageBuilder(url) //
 						.addHeader("Accept", "text/plain")
 						.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
-						.setJsonMessage(chatbotResponse.getResult().getJsonParameters()).build();
+						.setJsonMessage(chatbotResponse.getResult().getJsonAllParameters()).build();
 				HttpResponse httpActionResponse = (action.endsWith("-get")) //
 						? httpHelper.getData(httpActionMessage)
 						: httpHelper.postData(httpActionMessage);
@@ -182,6 +182,9 @@ public class BotService {
 					//manage response
 					if(outputType == null) outputType = "service-message";
 					switch(outputType) {
+						case "none": 
+							response = "";
+							break;
 						case "service-message": 
 							response = (serviceResponse.length() == 0) ? // if no response, take API response
 								botResponse : serviceResponse;
@@ -200,7 +203,6 @@ public class BotService {
 							logger.error("Not managed outputType '{}'' for action: {}", outputType, action);
 							break;
 						}
-										
 				} else {
 					response = "Service " + action + " error";
 					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(),
@@ -217,8 +219,8 @@ public class BotService {
 
 	/*package for test*/ ChatBotResponse buildChatBotResponse(String jsonResponse) {
 		ChatBotResponse cbr = GSON.fromJson(jsonResponse, ChatBotResponse.class);
-		if (cbr.getResult() != null && cbr.getResult().getParameters() != null) {
-			cbr.getResult().setJsonParameters(GSON.toJson(cbr.getResult().getParameters()));
+		if (cbr.getResult() != null) {
+			cbr.getResult().setJsonAllParameters(GSON.toJson(cbr.getResult().getAllParameters()));
 		}
 		return cbr;
 	}
