@@ -186,8 +186,8 @@ public class BotService {
 							response = "";
 							break;
 						case "service-message": 
-							response = (serviceResponse.length() == 0) ? // if no response, take API response
-								botResponse : serviceResponse;
+							response = (serviceResponse.length() == 0) // if no response, take API response
+							  ? botResponse : serviceResponse;
 							break;
 						case "bot-message": 
 							response = botResponse;

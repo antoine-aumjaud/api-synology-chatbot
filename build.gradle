@@ -3,7 +3,7 @@ apply plugin: 'eclipse'
 apply plugin: 'application'
 
 mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
-version = '1.2.1'
+version = '1.2.2'
 def apiJavalibVersion = '1.7.0'
 
 sourceCompatibility = 1.8
