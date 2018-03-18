@@ -1,5 +1,6 @@
 package fr.aumjaud.antoine.services.synology.chatbot.service;
 
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -229,7 +230,8 @@ public class BotService {
 		if (chatbotResponse.getResult() != null && chatbotResponse.getResult().getAllParameters() != null) {
 			for (Map.Entry<String, String> entry : chatbotResponse.getResult().getAllParameters().entrySet()) {
 				if (url.contains(":" + entry.getKey())) {
-					url = url.replace(":" + entry.getKey(), entry.getValue());
+					String value = URLEncoder.encode(entry.getValue(), "UTF-8");
+					url = url.replace(":" + entry.getKey(), value);
 				}
 			}
 		}
