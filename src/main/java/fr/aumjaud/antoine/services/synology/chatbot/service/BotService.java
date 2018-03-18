@@ -1,5 +1,6 @@
 package fr.aumjaud.antoine.services.synology.chatbot.service;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
@@ -206,13 +207,13 @@ public class BotService {
 						}
 				} else {
 					response = "Service " + action + " error";
-					logger.warn("{} API return an error {}: {}", action, httpActionResponse.getHttpCode(),
+					logger.warn("{} API has returned an error {}: {}", action, httpActionResponse.getHttpCode(),
 							httpActionResponse.getContent());
 				}
 			}
 		} else {
 			response = "ChatBot-API error (API.AI error)";
-			logger.warn("AI-API return an error {}: {}", httpChatBotResponse.getHttpCode(),
+			logger.warn("AI-API has returned an error {}: {}", httpChatBotResponse.getHttpCode(),
 					httpChatBotResponse.getContent());
 		}
 		return response;
@@ -230,8 +231,12 @@ public class BotService {
 		if (chatbotResponse.getResult() != null && chatbotResponse.getResult().getAllParameters() != null) {
 			for (Map.Entry<String, String> entry : chatbotResponse.getResult().getAllParameters().entrySet()) {
 				if (url.contains(":" + entry.getKey())) {
-					String value = URLEncoder.encode(entry.getValue(), "UTF-8");
-					url = url.replace(":" + entry.getKey(), value);
+					try {
+						String value = URLEncoder.encode(entry.getValue(), "UTF-8");
+						url = url.replace(":" + entry.getKey(), value);
+					} catch(UnsupportedEncodingException e) {
+						logger.error("Can't encode parameter, {}", e.getMessage(), e);
+					}
 				}
 			}
 		}
