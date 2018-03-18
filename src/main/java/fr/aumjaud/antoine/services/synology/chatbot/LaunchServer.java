@@ -22,6 +22,11 @@ public class LaunchServer {
 			}
 
 			@Override
+			public String getApiName() {
+				return "api-synology-chatbot";
+			}
+
+			@Override
 			public void setConfig(Properties appProperties) {
 				botResource.setConfig(appProperties);
 			}
