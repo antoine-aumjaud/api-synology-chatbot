@@ -177,7 +177,7 @@ public class BotService {
 				HttpResponse httpActionResponse = (action.endsWith("-get")) //
 						? httpHelper.getData(httpActionMessage)
 						: httpHelper.postData(httpActionMessage);
-				if (httpActionResponse.getHttpCode() == HttpCode.OK) {
+				if (httpActionResponse.getHttpCode().isASucessCode()) {
 					String serviceResponse = httpActionResponse.getContent();
 					logger.debug("Response from service {}: '{}'", action, serviceResponse);
 					
