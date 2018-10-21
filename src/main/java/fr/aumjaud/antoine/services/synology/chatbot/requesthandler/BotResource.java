@@ -119,7 +119,7 @@ public class BotResource {
 
 	/**
 	 * Get message form request
-	 * @param request
+	 * @param request the request
 	 * @return the message
 	 */
 	private ChatBotMessage getChatBotMessage(Request request) throws WrongRequestException {
