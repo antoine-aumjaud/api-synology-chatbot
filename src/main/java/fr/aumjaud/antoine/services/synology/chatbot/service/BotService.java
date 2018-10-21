@@ -103,8 +103,10 @@ public class BotService {
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
-			return httpResponse.getHttpCode() == HttpCode.OK 
-				&& !httpResponse.getContent().contains("error");
+			String content = httpResponse.getContent();
+			boolean res = httpResponse.getHttpCode() == HttpCode.OK && !content.contains("error");
+			if(!res) logger.error("Message '{}' NOT sent to user {}, response: {}", message, userName, content);
+			return res;
 		} else {
 			logger.error("Message '{}' NOT sent to user {}", message, userName);
 			return false;
