@@ -2,6 +2,7 @@ package fr.aumjaud.antoine.services.synology.chatbot.service;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -71,7 +72,7 @@ public class BotService {
 			response = chatBotService(agentToken, message, userName);
 		}
 		logger.debug("Response to Chat: {}", response);
-		return buildSynologyChatPayload(response);
+		return buildSynologyChatPayload(response, null);
 	}
 
 	/**
@@ -80,7 +81,7 @@ public class BotService {
 	 * @param message the message to send
 	 * @return true if message sent
 	 */
-	public boolean sendMessage(String userName, String message) {
+	public boolean sendMessage(String userName, String message, String url) {
 		// Check configuration
 		String token = properties.getProperty("token." + userName);
 		if (token == null)
@@ -98,7 +99,7 @@ public class BotService {
 		}
 
 		// Build payload (https://www.synology.com/en-us/knowledgebase/DSM/help/Chat/chat_integration)
-		String payload = "payload=" + buildSynologyChatPayload(message); //not a json message
+		String payload = "payload=" + buildSynologyChatPayload(message, url); //not a json message
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
@@ -117,11 +118,16 @@ public class BotService {
 	/**
 	 * Build payload in Synology Chat format
 	 * @param message the message to send
-	 * @return the paylaod
+	 * @param url the url to a file added with the message
+	 * @return the payload
 	 */
-	private String buildSynologyChatPayload(String message) {
+	private String buildSynologyChatPayload(String message, String url) {
 		if (message != null) message = message.replace("\n", "\\n");
-		return String.format("{\"text\": \"%s\"}", message);
+		
+		List<String> payload = new ArrayList<>(); 
+		if(message != null) payload.add(String.format("\"text\": \"%s\"", message));
+		if(url != null)     payload.add(String.format("\"file_url\": \"%s\"}", url));
+		return String.format("{%s}", String.join(", ", payload));
 	}
 
 	/**

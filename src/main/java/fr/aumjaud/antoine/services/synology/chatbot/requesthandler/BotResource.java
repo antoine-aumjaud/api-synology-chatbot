@@ -73,7 +73,7 @@ public class BotResource {
 		// Get controlled message
 		String message = travisService.getMessage(payload, signatureB64);
 
-		return sendMessage(request, response, message);
+		return sendMessage(request, response, message, null);
 	}
 
 	/**
@@ -84,10 +84,11 @@ public class BotResource {
 		if (chatBotMessage == null)
 			throw new WrongRequestException("message has not a json format", "Message to send has a wrong format");
 		String message = chatBotMessage.getMessage();
+		String url = chatBotMessage.getUrl();
 		if (message == null || message.length() == 0)
 			throw new WrongRequestException("message is null", "Message to send is not present");
 
-		return sendMessage(request, response, message);
+		return sendMessage(request, response, message, url);
 	}
 
 	/*
@@ -95,9 +96,9 @@ public class BotResource {
 	 */
 
 	/**
-	 * Send an request extracted message 
+	 * Send a request extracted message 
 	 */
-	private String sendMessage(Request request, Response response, String message) {
+	private String sendMessage(Request request, Response response, String message, String url) {
 
 		// Check parameters
 		String userName = request.params("user");
@@ -105,7 +106,7 @@ public class BotResource {
 			throw new WrongRequestException("user is null", "User is not present");
 
 		// Call service
-		boolean messageSent = botService.sendMessage(userName, message);
+		boolean messageSent = botService.sendMessage(userName, message, url);
 
 		// Build response
 		if (messageSent) {
