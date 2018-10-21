@@ -4,6 +4,7 @@ import java.security.InvalidKeyException;
 import java.util.Properties;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotMessage;
@@ -121,7 +122,12 @@ public class BotResource {
 	 * @param request
 	 * @return the message
 	 */
-	ChatBotMessage getChatBotMessage(Request request) {
-		return GSON.fromJson(request.body(), ChatBotMessage.class);
+	private ChatBotMessage getChatBotMessage(Request request) throws WrongRequestException {
+		try {
+			return GSON.fromJson(request.body(), ChatBotMessage.class);
+		} 
+		catch(JsonSyntaxException e) {
+			throw new WrongRequestException("message has not a json format", "Message to send has a wrong format: " + request.body());
+		}
 	}
 }
