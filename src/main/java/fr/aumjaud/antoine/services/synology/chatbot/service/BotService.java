@@ -128,7 +128,7 @@ public class BotService {
 		
 		List<String> payload = new ArrayList<>(); 
 		if(message != null) payload.add(String.format("\"text\": \"%s\"", message));
-		if(url != null)     payload.add(String.format("\"file_url\": \"%s\"}", url));
+		if(url != null)     payload.add(String.format("\"file_url\": \"%s\"", url));
 		return String.format("{%s}", String.join(", ", payload));
 	}
 
