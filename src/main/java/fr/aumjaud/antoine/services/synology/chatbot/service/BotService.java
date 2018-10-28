@@ -105,7 +105,7 @@ public class BotService {
 			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
 			String content = httpResponse.getContent();
 			boolean res = httpResponse.getHttpCode() == HttpCode.OK && !content.contains("error");
-			if(!res) logger.error("Message '{}' NOT sent to user {}, response: {}", message, userName, content);
+			if(!res) logger.error("Payload '{}' NOT sent to user {}, response: {}", payload, userName, content);
 			return res;
 		} else {
 			logger.error("Message '{}' NOT sent to user {}", message, userName);
