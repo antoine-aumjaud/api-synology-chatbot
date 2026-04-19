@@ -11,6 +11,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.Test;
 
+import com.google.gson.JsonParser;
+
 import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotResponse;
 public class BotServiceTest {
 
@@ -30,7 +32,9 @@ public class BotServiceTest {
         assertFalse(cbr.getResult().isActionIncomplete());
         assertEquals("family-weight-set", cbr.getResult().getAction());
 		assertNotNull(cbr.getResult().getParameters());
-        assertEquals("{\"firstname\":\"Kyllian\",\"kg\":\"10\",\"g\":\"\"}", cbr.getResult().getJsonAllParameters());
+		assertEquals(
+		new JsonParser().parse("{\"firstname\":\"Kyllian\",\"kg\":\"10\",\"g\":\"\"}"),
+		new JsonParser().parse(cbr.getResult().getJsonAllParameters()));
     }
 
 
@@ -48,7 +52,9 @@ public class BotServiceTest {
         assertFalse(cbr.getResult().isActionIncomplete());
         assertEquals("family-weight-set", cbr.getResult().getAction());
 		assertNotNull(cbr.getResult().getContextsParameters());
-        assertEquals("{\"p1\":\"v1\",\"p2\":\"v2\",\"pc2\":\"vc2\",\"pc1\":\"vc1\"}", cbr.getResult().getJsonAllParameters());
+	assertEquals(
+		new JsonParser().parse("{\"p1\":\"v1\",\"p2\":\"v2\",\"pc2\":\"vc2\",\"pc1\":\"vc1\"}"),
+		new JsonParser().parse(cbr.getResult().getJsonAllParameters()));
 	}
 	
     @Test

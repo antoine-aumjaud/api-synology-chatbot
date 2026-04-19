@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM eclipse-temurin:25-jre
 
 LABEL maintainer "Antoine Aumjaud <antoine_dev@aumjaud.fr>"
 

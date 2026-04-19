@@ -1,7 +1,7 @@
 # api-syno-chatbot
 API - Synology chatbot: Linked to Google API.AI
 
-[![Build Status](https://travis-ci.org/antoine-aumjaud/api-synology-chatbot.svg?branch=master)](https://travis-ci.org/antoine-aumjaud/api-synology-chatbot)
+[![Build Status](https://github.com/antoine-aumjaud/api-synology-chatbot/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/antoine-aumjaud/api-synology-chatbot/actions/workflows/build.yml)
 
 This micro-service :  
 - recieves webhook from Synology Chat,
@@ -15,13 +15,16 @@ It can also push messages to Synology Chat.
 ## Execution and Test
 
 This repository use gradle to build the app. You can use ./gradlew run to launch the application.
+The project is configured to run with Java 25.
+
 Once the service launched, you can test it with this url :
-http://localhost:9080/hi
+http://localhost:9080/hi  
 You can reload the configuration : 
 http://localhost:9080/secure/reloadConfig?secure-key:xxx (or curl --header 'secure-key: xxx' "http://localhost:9080/secure/reloadConfig" )
 
 ## Configuration
-The configuration is here : https://github.com/antoine-aumjaud/api-synology-chatbot/blob/master/src/dist/lib/conf/api-synology-chatbot.properties
+
+The configuration is here: https://github.com/antoine-aumjaud/api-synology-chatbot/blob/master/src/dist/lib/conf/api-synology-chatbot.properties
 
 ```ini
 secure-key=xxx

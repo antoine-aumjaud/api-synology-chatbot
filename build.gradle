@@ -1,16 +1,20 @@
 plugins {
-    id 'de.undercouch.download' version '3.2.0'
+    id 'java'
+    id 'application'
+    id 'de.undercouch.download' version '5.6.0'
 }
 
-apply plugin: 'java'
-apply plugin: 'application'
-
-mainClassName = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
+application {
+    mainClass = 'fr.aumjaud.antoine.services.synology.chatbot.LaunchServer'
+}
 version = '1.4.0'
 def apiJavalibVersion = '1.13.0'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 repositories {
     mavenCentral()
@@ -24,21 +28,24 @@ task downloadLib(type: de.undercouch.gradle.tasks.download.Download) {
     dest 'lib'
     onlyIfNewer true
 }
-compileJava { dependsOn downloadLib } 
+
+tasks.named('compileJava') {
+    dependsOn downloadLib
+}
 
 dependencies {
-	compile name: 'api-javalib', version: apiJavalibVersion
+    implementation name: 'api-javalib', version: apiJavalibVersion
 	//Transitive dependencies
-    compile('com.sparkjava:spark-core:2.6.0') {
+    implementation('com.sparkjava:spark-core:2.6.0') {
     	exclude group: 'org.slf4j' //old version
 	}
-    compile 'org.slf4j:slf4j-api:1.7.25'
-	compile 'com.google.code.gson:gson:2.8.0'
-	compile 'org.bouncycastle:bcpkix-jdk15on:1.52'
-	compile 'com.auth0:java-jwt:3.3.0'
+    implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'com.google.code.gson:gson:2.8.0'
+    implementation 'org.bouncycastle:bcpkix-jdk15on:1.52'
+    implementation 'com.auth0:java-jwt:3.3.0'
     //
-    runtime 'ch.qos.logback:logback-classic:1.2.3'
-	testCompile 'junit:junit:4.12'
+    runtimeOnly 'ch.qos.logback:logback-classic:1.2.3'
+    testImplementation 'junit:junit:4.12'
 }
 
 processResources {
