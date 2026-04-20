@@ -1,5 +1,8 @@
 package fr.aumjaud.antoine.services.synology.chatbot.service;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -65,11 +68,12 @@ public class BotService {
 			response = echoService();
 		}
 		else if (message.startsWith("get")) {
-			response = downloadService();
+			String url = extractUrlFromMessage(message);
+			response = downloadService(url, userName);
 		} 
 		else {
 			// TODO call AI with skills
-			throw new NotImplementedException("message not supported", "Message not supported: " + message);
+			throw new UnsupportedOperationException("Message not supported: " + message);
 		}
 		logger.debug("Response to Chat: {}", response);
 		return buildSynologyChatPayload(response, null);
@@ -141,16 +145,139 @@ public class BotService {
 		return "echo from bot service";
 	}
 
+
+	/**
+	 * Extract URL from message starting with "get"
+	 * @param message the full message
+	 * @return the extracted URL, or null if not found
+	 */
+	private String extractUrlFromMessage(String message) {
+		if (message == null || !message.startsWith("get")) {
+			return null;
+		}
+		
+		// Extract URL after "get " prefix
+		String url = message.substring(3).trim();
+		return url.isEmpty() ? null : url;
+	}
+
 	/**
 	 * Service which download a file and send its to a share drive, then send the url to the chat
+	 * @param url the URL to download
+	 * @param userName the user requesting the download
 	 * @return the string to send to the chat
 	 */
-	private String downloadService() {
+	private String downloadService(String url, String userName) {
+		// Validate URL
+		if (url == null || url.trim().isEmpty()) {
+			return "ERROR: No URL provided. Usage: get <url>";
+		}
 
-		// si url est sur youtube
-		// lance la commande youtube-dl pour télécharger la vidéo
-		// cette commande doit être lanc2e
-		return "download service not implemented yet";
+		try {
+			// Check if it's a YouTube URL
+			var isYoutubeUrl = url.matches("(?:https?://)?(?:www\\.)?(?:youtube\\.com|youtu\\.be).*");
+			if (isYoutubeUrl) {
+				logger.debug("YouTube URL detected: {}", url);
+				String downloadedFileUrl = downloadYoutubeVideo(url, userName);
+				if (downloadedFileUrl != null) {
+					return "Video downloaded successfully: " + downloadedFileUrl;
+				} else {
+					return "ERROR: Failed to download YouTube video";
+				}
+			} else {
+				return "ERROR: Only YouTube URLs are currently supported yet";
+			}
+		} catch (Exception e) {
+			logger.error("Error downloading file from {}: {}", url, e.getMessage(), e);
+			return "ERROR: " + e.getMessage();
+		}
 	}
+
+	/**
+	 * Download a YouTube video using youtube-dl in a Docker container
+	 * @param url the YouTube URL
+	 * @param userName the user requesting the download
+	 * @return the URL to the downloaded file, or null if download failed
+	 */
+	private String downloadYoutubeVideo(String url, String userName) {
+		try {
+			// Get Docker image and volume configuration from properties
+			String dockerImage = properties.getProperty("docker.youtube-dl.image");
+			String nasVolume = properties.getProperty("nas.volume.path");
+			String containerVolume = properties.getProperty("docker.container.volume");
+
+			logger.info("Starting YouTube download for URL: {}", url);
+
+			// Create unique directory for this download based on username and timestamp
+			String downloadDir = String.format("%s/%s_%d", nasVolume, userName, System.currentTimeMillis());
+			
+			// Build docker run command
+			String dockerCmd = String.format(
+				"docker run --rm -v %s:%s %s youtube-dl -o '%s/%s/%%(title)s.%%(ext)s' -- %s",
+				nasVolume,
+				containerVolume,
+				dockerImage,
+				containerVolume,
+				userName,
+				url
+			);
+
+			logger.debug("Executing Docker command: {}", dockerCmd);
+
+			// Execute the docker command
+			ProcessBuilder pb = new ProcessBuilder("bash", "-c", dockerCmd);
+			pb.redirectErrorStream(true);
+			Process process = pb.start();
+
+			// Read command output
+			StringBuilder output = new StringBuilder();
+			try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(process.getInputStream()))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					output.append(line).append("\n");
+					logger.debug("youtube-dl output: {}", line);
+				}
+			}
+
+			// Wait for process completion
+			int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				logger.error("Docker youtube-dl failed with exit code {}. Output: {}", exitCode, output);
+				return null;
+			}
+
+			// Extract filename from output to build the complete URL
+			String fileName = extractFileNameFromYoutubeDL(output.toString());
+			if (fileName != null) {
+				logger.info("YouTube video downloaded successfully. File name: {}", fileName);
+				return fileName;
+			}
+
+			logger.warn("Could not extract filename from youtube-dl output");
+			return null;
+		} 
+		catch (Exception e) {
+			logger.error("Error during YouTube download: {}", e.getMessage(), e);
+			return null;
+		}
+	}
+
+	/**
+	 * Extract the downloaded filename from youtube-dl output
+	 * @param output the youtube-dl command output
+	 * @return the filename, or null if not found
+	 */
+	private String extractFileNameFromYoutubeDL(String output) {
+		// youtube-dl typically outputs lines like: "Destination: filename.ext"
+		Pattern pattern = Pattern.compile("Destination:\\s*(.+)");
+		Matcher matcher = pattern.matcher(output);
+		if (matcher.find()) {
+			String path = matcher.group(1);
+			// Extract just the filename from the full path
+			return new java.io.File(path).getName();
+		}
+		return null;
+	}
+
 
 }
