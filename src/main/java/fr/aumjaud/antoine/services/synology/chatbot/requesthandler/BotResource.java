@@ -9,6 +9,7 @@ import com.google.gson.JsonSyntaxException;
 import fr.aumjaud.antoine.services.common.security.WrongRequestException;
 import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotMessage;
 import fr.aumjaud.antoine.services.synology.chatbot.service.BotService;
+import fr.aumjaud.antoine.services.synology.chatbot.service.GithubService;
 import fr.aumjaud.antoine.services.synology.chatbot.service.TravisService;
 import spark.Request;
 import spark.Response;
@@ -18,6 +19,7 @@ public class BotResource {
 
 	private BotService botService = new BotService();
 	private TravisService travisService = new TravisService();
+	private GithubService githubService = new GithubService();
 
 	/**
 	 * Set config
@@ -26,6 +28,7 @@ public class BotResource {
 	 */
 	public void setConfig(Properties properties) {
 		travisService.setConfig(properties);
+		githubService.setConfig(properties);
 		botService.setConfig(properties);
 	}
 
@@ -73,6 +76,23 @@ public class BotResource {
 
 		// Get controlled message
 		String message = travisService.getMessage(payload, signatureB64);
+
+		return sendMessage(request, response, message, null);
+	}
+
+	/**
+	 * Send a message from GitHub Actions
+	 */
+	public String sendGithubPayload(Request request, Response response) {
+		String payload = request.body();
+		if (payload == null || payload.length() == 0)
+			throw new WrongRequestException("payload is null", "Payload to send is not present");
+
+		String signatureSha256 = request.headers("X-Hub-Signature-256");
+		if (signatureSha256 == null)
+			throw new WrongRequestException("signature is null", "No GitHub signature sent with payload");
+
+		String message = githubService.getMessage(payload, signatureSha256);
 
 		return sendMessage(request, response, message, null);
 	}

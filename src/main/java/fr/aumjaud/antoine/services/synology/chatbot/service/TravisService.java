@@ -35,7 +35,6 @@ public class TravisService {
 	/**
 	 * Set config
 	 * @param properties the config to set
-	 * @return true if config set successfully
 	 */
 	public void setConfig(Properties properties) {
 		this.properties = properties;

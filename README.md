@@ -32,6 +32,11 @@ secure-key=xxx
 The first line of the configuration is the value of a header or an URL parameter that should be set to access to an URL which a /secure/* path.
 
 ```ini
+github.webhook.secret=xxx
+```
+Shared secret used by the `/send-github/:user` endpoint to validate `X-Hub-Signature-256` (HMAC SHA256).
+
+```ini
 #message chat->api
 chat-tokens=xxx;
 ```
@@ -78,3 +83,11 @@ So workflow is:
 DS Chat -> chabot API receive -> API.AI -> chatbot API -> call an action (WS) -> chatbot API -> DS Chat (in HTTP response)
 
 You can use webhook from API.AI too and the API.AI would always returns output to display the result build on API.AI side.
+
+GitHub Actions notifications are sent by the workflow itself to `/send-github/:user`.
+The workflow sends notifications on success/failure (step with `if: always()`) and signs the JSON payload with `CHATBOT_WEBHOOK_SECRET`.
+
+Required repository secrets:
+- `CHATBOT_ENDPOINT` (example: `https://my-api.example.com`)
+- `CHATBOT_USER` (the `:user` route parameter mapped to `token.<user>`)
+- `CHATBOT_WEBHOOK_SECRET` (same value as `github.webhook.secret` in this API configuration)

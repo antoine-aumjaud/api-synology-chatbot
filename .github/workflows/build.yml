@@ -42,3 +42,32 @@ jobs:
         context: .
         push: true
         tags: ${{ env.IMAGE_NAME }}:latest
+
+    - name: Notify Synology chat bot
+      if: always() && secrets.CHATBOT_ENDPOINT != '' && secrets.CHATBOT_USER != '' && secrets.CHATBOT_WEBHOOK_SECRET != ''
+      env:
+        CHATBOT_ENDPOINT: ${{ secrets.CHATBOT_ENDPOINT }}
+        CHATBOT_USER: ${{ secrets.CHATBOT_USER }}
+        CHATBOT_WEBHOOK_SECRET: ${{ secrets.CHATBOT_WEBHOOK_SECRET }}
+        REPOSITORY: ${{ github.repository }}
+        WORKFLOW: ${{ github.workflow }}
+        STATUS: ${{ job.status }}
+        BRANCH: ${{ github.ref_name }}
+        RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+      run: |
+        payload=$(jq -n \
+          --arg repository "$REPOSITORY" \
+          --arg workflow "$WORKFLOW" \
+          --arg status "$STATUS" \
+          --arg branch "$BRANCH" \
+          --arg url "$RUN_URL" \
+          --arg message "$COMMIT_MESSAGE" \
+          '{repository: $repository, workflow: $workflow, status: $status, branch: $branch, url: $url, message: $message}')
+
+        signature=$(printf '%s' "$payload" | openssl dgst -sha256 -hmac "$CHATBOT_WEBHOOK_SECRET" | sed 's/^.* //')
+
+        curl -fsS -X POST "$CHATBOT_ENDPOINT/send-github/$CHATBOT_USER" \
+          -H "Content-Type: application/json" \
+          -H "X-Hub-Signature-256: sha256=$signature" \
+          --data "$payload"

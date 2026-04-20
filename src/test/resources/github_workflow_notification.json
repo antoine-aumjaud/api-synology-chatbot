@@ -1,0 +1,8 @@
+{
+  "repository": "antoine-aumjaud/api-synology-chatbot",
+  "workflow": "java build",
+  "status": "failure",
+  "branch": "master",
+  "url": "https://github.com/antoine-aumjaud/api-synology-chatbot/actions/runs/42",
+  "message": "Tests failed"
+}

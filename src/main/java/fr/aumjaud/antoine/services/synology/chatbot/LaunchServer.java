@@ -34,6 +34,7 @@ public class LaunchServer {
 			@Override
 			public void initSpark(String securePath) {
 				post("/send-travis/:user", botResource::sendTravisPayload); //not secure, use Travis signature 
+				post("/send-github/:user", botResource::sendGithubPayload); //not secure, use GitHub signature 
 				path(securePath, () -> {
 					post("/receive/", "application/json", botResource::receiveMessage); //let last "/" (bug on syno chat integration)
 					post("/send-message/:user", botResource::sendMessage);
