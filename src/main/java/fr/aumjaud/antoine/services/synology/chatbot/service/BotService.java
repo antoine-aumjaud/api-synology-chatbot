@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
-import fr.aumjaud.antoine.services.synology.chatbot.model.ChatBotResponse;
 import fr.aumjaud.antoine.services.common.http.HttpCode;
 import fr.aumjaud.antoine.services.common.http.HttpHelper;
 import fr.aumjaud.antoine.services.common.http.HttpMessage;
@@ -64,12 +63,13 @@ public class BotService {
 		String response;
 		if (message.startsWith("echo")) {
 			response = echoService();
-		} else {
-			String agentToken = properties.getProperty("api-ai.client." + channelId + ".token");
-			if(agentToken == null) {
-				agentToken = properties.getProperty("api-ai.client.others.token");
-			}
-			response = chatBotService(agentToken, message, userName);
+		}
+		else if (message.startsWith("get")) {
+			response = downloadService();
+		} 
+		else {
+			// TODO call AI with skills
+			throw new NotImplementedException("message not supported", "Message not supported: " + message);
 		}
 		logger.debug("Response to Chat: {}", response);
 		return buildSynologyChatPayload(response, null);
@@ -132,15 +132,6 @@ public class BotService {
 		return String.format("{%s}", String.join(", ", payload));
 	}
 
-	/**
-	 * Build payload for chatbot (API.AI format)
-	 * @param message the message to send
-	 * @param userName the user name of the sender
-	 * @return the paylaod
-	 */
-	private String buildChatBotPayload(String message, String userName) {
-		return String.format("{\"query\": [\"%s\"], \"timezone\": \"Europe/Paris\", \"lang\": \"fr\", \"sessionId\": \"%s\" }", message, userName);
-	}
 
 	/**
 	 * Service which reply a static string
@@ -151,123 +142,15 @@ public class BotService {
 	}
 
 	/**
-	 * Service which call the AI API and then the service specified by the bot
-	 * @param agentToken the token to identify the agent
-	 * @param message the message sent in the chat by the user
-	 * @param userName the user name of the sender
+	 * Service which download a file and send its to a share drive, then send the url to the chat
 	 * @return the string to send to the chat
 	 */
-	private String chatBotService(String agentToken, String message, String userName) {
-		String response;
-		HttpMessage httpChatBotMessage = new HttpMessageBuilder(properties.getProperty("api-ai.url"))
-				.setJsonMessage(buildChatBotPayload(message, userName))
-				.addHeader("Authorization", "Bearer " + agentToken).build();
-		HttpResponse httpChatBotResponse = httpHelper.postData(httpChatBotMessage);
-		if (httpChatBotResponse.getHttpCode() == HttpCode.OK) {
-			String jsonResponse = httpChatBotResponse.getContent();
-			logger.debug("Response from API.AI: '{}'", jsonResponse);
-			ChatBotResponse chatbotResponse = buildChatBotResponse(jsonResponse);
-			String action = chatbotResponse.getResult().getAction();
-			String botResponse = chatbotResponse.getResult().getFulfillment().getSpeech();
-			//If action not completed, or output forced
-			if (action.contains(properties.getProperty("api-ai.action.output"))
-					|| chatbotResponse.getResult().isActionIncomplete()) {
-				response = botResponse;
-			} else { //Action completed
-						//Call the service specified by the bot
-				logger.debug("Call service: {}", action);
-				String url = buildUrlWithValuedParameters(properties.getProperty("api-ai.action." + action + ".url"), chatbotResponse);
-				String outputType = chatbotResponse.getResult().getParameters().get("outputType");
-				HttpMessage httpActionMessage = new HttpMessageBuilder(url) //
-						.addHeader("Accept", "text/plain")
-						.setSecureKey(properties.getProperty("api-ai.action." + action + ".secure-key"))
-						.setJsonMessage(chatbotResponse.getResult().getJsonAllParameters()).build();
-				HttpResponse httpActionResponse = (action.endsWith("-get")) //
-						? httpHelper.getData(httpActionMessage)
-						: httpHelper.postData(httpActionMessage);
-				if (httpActionResponse.getHttpCode().isASucessCode()) {
-					String serviceResponse = httpActionResponse.getContent();
-					logger.debug("Response from service {}: '{}'", action, serviceResponse);
-					
-					//manage response
-					if(outputType == null) outputType = "service-message";
-					switch(outputType) {
-						case "none": 
-							response = "";
-							break;
-						case "service-message": 
-							response = (serviceResponse.length() == 0) ? // if no response, take API response
-								botResponse : serviceResponse;
-							break;
-						case "bot-message": 
-							response = botResponse;
-							break;
-						case "bot-text-template": 
-							response = fillTextTemplate(botResponse, serviceResponse);
-							break;
-						case "bot-json-template": 
-							response = fillJsonTemplate(botResponse, serviceResponse);
-							break;
-						default:
-							response = "ChatBot-API error (output management)";
-							logger.error("Not managed outputType '{}' for action: {}", outputType, action);
-							break;
-						}
-				} else {
-					response = "Service " + action + " error";
-					logger.warn("{} API has returned an error {}: {}", action, httpActionResponse.getHttpCode(),
-							httpActionResponse.getContent());
-				}
-			}
-		} else {
-			response = "ChatBot-API error (API.AI error)";
-			logger.warn("AI-API has returned an error {}: {}", httpChatBotResponse.getHttpCode(),
-					httpChatBotResponse.getContent());
-		}
-		return response;
+	private String downloadService() {
+
+		// si url est sur youtube
+		// lance la commande youtube-dl pour télécharger la vidéo
+		// cette commande doit être lanc2e
+		return "download service not implemented yet";
 	}
 
-	/*package for test*/ ChatBotResponse buildChatBotResponse(String jsonResponse) {
-		ChatBotResponse cbr = GSON.fromJson(jsonResponse, ChatBotResponse.class);
-		if (cbr.getResult() != null) {
-			cbr.getResult().setJsonAllParameters(GSON.toJson(cbr.getResult().getAllParameters()));
-		}
-		return cbr;
-	}
-
-	private String buildUrlWithValuedParameters(String url, ChatBotResponse chatbotResponse) {
-		if (chatbotResponse.getResult() != null && chatbotResponse.getResult().getAllParameters() != null) {
-			for (Map.Entry<String, String> entry : chatbotResponse.getResult().getAllParameters().entrySet()) {
-				if (url.contains(":" + entry.getKey())) {
-					try {
-						String value = URLEncoder.encode(entry.getValue(), "UTF-8");
-						url = url.replace(":" + entry.getKey(), value);
-					} catch(UnsupportedEncodingException e) {
-						logger.error("Can't encode parameter, {}", e.getMessage(), e);
-					}
-				}
-			}
-		}
-		return url;
-	}
-
-	/* package for test*/ String fillTextTemplate(String template, String value) {
-		return String.format(template, value);
-	}
-	
-	private Pattern patternTemplate = Pattern.compile("\\$\\{(\\w+)\\}");
-	/* package for test*/ String fillJsonTemplate(String template, String jsonValue) {
-		String ret = template;
-		Matcher templateMatcher = patternTemplate.matcher(template);
-		while (templateMatcher.find()) {
-			String token = templateMatcher.group(1);
-			Pattern valueTemplate = Pattern.compile("\"" + token + "\"\\s*:\\s*\"(.*)\"");
-			Matcher valueMatcher = valueTemplate.matcher(jsonValue);
-			if(valueMatcher.find()) {
-				ret = ret.replace("${" + token + "}", valueMatcher.group(1)); 
-			}
-		}
-		//TODO prefer use jsonpath 
-		return ret;
-	}
 }
