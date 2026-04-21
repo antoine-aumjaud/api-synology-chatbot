@@ -209,7 +209,6 @@ public class BotService {
 				.replace("$url", url)
 				.replace("$gid", gid)
 				.replace("$uid", uid);
-
 			logger.info("Executing command: {}", cmd);
 
 			// Execute the docker command
@@ -223,7 +222,7 @@ public class BotService {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					output.append(line).append("\n");
-					logger.debug("youtube-dl output: {}", line);
+					logger.debug("youtube download output: {}", line);
 				}
 			}
 
@@ -235,37 +234,13 @@ public class BotService {
 			}
 
 			// Extract filename from output to build the complete URL
-			String fileName = extractFileNameFromYoutubeDL(output.toString());
-			if (fileName != null) {
-				logger.info("YouTube video downloaded successfully. File name: {}", fileName);
-				return fileName;
-			}
-
-			logger.warn("Could not extract filename from youtube-dl output");
-			return null;
+			logger.info("YouTube downloaded successfully. Output: {}", output);
+			return "YouTube downloaded successfully. Check the downloaded file in your drive.";
 		} 
 		catch (Exception e) {
 			logger.error("Error during YouTube download: {}", e.getMessage(), e);
 			return null;
 		}
 	}
-
-	/**
-	 * Extract the downloaded filename from youtube-dl output
-	 * @param output the youtube-dl command output
-	 * @return the filename, or null if not found
-	 */
-	private String extractFileNameFromYoutubeDL(String output) {
-		// youtube-dl typically outputs lines like: "Destination: filename.ext"
-		Pattern pattern = Pattern.compile("Destination:\\s*(.+)");
-		Matcher matcher = pattern.matcher(output);
-		if (matcher.find()) {
-			String path = matcher.group(1);
-			// Extract just the filename from the full path
-			return new java.io.File(path).getName();
-		}
-		return null;
-	}
-
 
 }
