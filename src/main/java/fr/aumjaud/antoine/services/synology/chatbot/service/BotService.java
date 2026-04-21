@@ -202,11 +202,15 @@ public class BotService {
 	private String downloadYoutubeVideo(String url, String userName) {
 		try {
 			logger.info("Starting YouTube download for URL: {}", url);
+			String gid = properties.getProperty("user." + userName + ".group");
+			String uid = properties.getProperty("user." + userName + ".user");
 			String cmd = properties.getProperty("youtube.mp3.download.command")
 				.replace("\\$user", userName)
-				.replace("\\$url", url);
-
-			logger.debug("Executing command: {}", cmd);
+				.replace("\\$url", url)
+				.replace("\\$gid", gid)
+				.replace("\\$uid", uid);
+			
+			logger.info("Executing command: {}", cmd);
 
 			// Execute the docker command
 			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
