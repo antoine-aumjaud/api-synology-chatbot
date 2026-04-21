@@ -229,8 +229,8 @@ public class BotService {
 			// Wait for process completion
 			int exitCode = process.waitFor();
 			if (exitCode != 0) {
-				logger.error("Docker youtube-dl failed with exit code {}. Output: {}", exitCode, output);
-				return null;
+				logger.error("YouTube download failed with exit code {}. Output: {}", exitCode, output);
+				return "YouTube download failed";
 			}
 
 			// Extract filename from output to build the complete URL
@@ -239,7 +239,7 @@ public class BotService {
 		} 
 		catch (Exception e) {
 			logger.error("Error during YouTube download: {}", e.getMessage(), e);
-			return null;
+			return "ERROR: " + e.getMessage();
 		}
 	}
 
