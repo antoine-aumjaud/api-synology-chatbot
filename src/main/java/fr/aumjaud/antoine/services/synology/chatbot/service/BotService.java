@@ -201,31 +201,15 @@ public class BotService {
 	 */
 	private String downloadYoutubeVideo(String url, String userName) {
 		try {
-			// Get Docker image and volume configuration from properties
-			String dockerImage = properties.getProperty("docker.youtube-dl.image");
-			String nasVolume = properties.getProperty("nas.volume.path");
-			String containerVolume = properties.getProperty("docker.container.volume");
-
 			logger.info("Starting YouTube download for URL: {}", url);
+			String cmd = properties.getProperty("youtube.mp3.download.command")
+				.replace("\\$user", userName)
+				.replace("\\$url", url);
 
-			// Create unique directory for this download based on username and timestamp
-			String downloadDir = String.format("%s/%s_%d", nasVolume, userName, System.currentTimeMillis());
-			
-			// Build docker run command
-			String dockerCmd = String.format(
-				"docker run --rm -v %s:%s %s youtube-dl -o '%s/%s/%%(title)s.%%(ext)s' -- %s",
-				nasVolume,
-				containerVolume,
-				dockerImage,
-				containerVolume,
-				userName,
-				url
-			);
-
-			logger.debug("Executing Docker command: {}", dockerCmd);
+			logger.debug("Executing command: {}", cmd);
 
 			// Execute the docker command
-			ProcessBuilder pb = new ProcessBuilder("bash", "-c", dockerCmd);
+			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
 			pb.redirectErrorStream(true);
 			Process process = pb.start();
 
