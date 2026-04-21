@@ -205,11 +205,11 @@ public class BotService {
 			String gid = properties.getProperty("user." + userName + ".group");
 			String uid = properties.getProperty("user." + userName + ".user");
 			String cmd = properties.getProperty("youtube.mp3.download.command")
-				.replace("\\$user", userName)
-				.replace("\\$url", url)
-				.replace("\\$gid", gid)
-				.replace("\\$uid", uid);
-			
+				.replace("$user", userName)
+				.replace("$url", url)
+				.replace("$gid", gid)
+				.replace("$uid", uid);
+
 			logger.info("Executing command: {}", cmd);
 
 			// Execute the docker command
