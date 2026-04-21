@@ -1,5 +1,5 @@
 # api-syno-chatbot
-API - Synology chatbot: Linked to Google API.AI
+API - Synology chatbot: Linked to a LLM Agent
 
 [![Build Status](https://github.com/antoine-aumjaud/api-synology-chatbot/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/antoine-aumjaud/api-synology-chatbot/actions/workflows/build.yml)
 
@@ -62,14 +62,5 @@ the last %s is replaced by the token defined just before
 
 ## Workflow
 So workflow is:
-DS Chat -> chabot API receive -> API.AI -> chatbot API -> call an action (WS) -> chatbot API -> DS Chat (in HTTP response)
+DS Chat -> chabot API receive -> Agent with Skill  -> DS Chat (in HTTP response)
 
-You can use webhook from API.AI too and the API.AI would always returns output to display the result build on API.AI side.
-
-GitHub Actions notifications are sent by the workflow itself to `/send-github/:user`.
-The workflow sends notifications on success/failure (step with `if: always()`) and signs the JSON payload with `CHATBOT_WEBHOOK_SECRET`.
-
-Required repository secrets:
-- `CHATBOT_ENDPOINT` (example: `https://my-api.example.com`)
-- `CHATBOT_USER` (the `:user` route parameter mapped to `token.<user>`)
-- `CHATBOT_WEBHOOK_SECRET` (same value as `github.webhook.secret` in this API configuration)
