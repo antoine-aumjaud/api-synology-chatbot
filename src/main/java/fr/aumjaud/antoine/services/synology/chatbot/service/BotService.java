@@ -10,6 +10,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +34,7 @@ public class BotService {
 	private static final Gson GSON = new Gson();
 
 	private HttpHelper httpHelper = new HttpHelper();
+	private ExecutorService executorService = Executors.newFixedThreadPool(5);
 
 	private Properties properties;
 	private List<String> validTokens;
@@ -45,7 +48,7 @@ public class BotService {
 		this.properties = properties;
 		validTokens = Arrays.asList(properties.getProperty("chat-tokens").split(";"));
 	}
-
+	
 	/**
 	 * Receive message treatment
 	 * @param channelId the channel Id which send the message
@@ -67,16 +70,17 @@ public class BotService {
 		if (message.startsWith("echo")) {
 			response = echoService();
 		}
-		else if (message.startsWith("get")) {
-			String url = extractUrlFromMessage(message);
-			response = downloadService(url, userName);
+		else if (channelId.equals(properties.getProperty("mp3.channel-id"))) {
+			response = downloadService(message, userName);
 		} 
 		else {
 			// TODO call AI with skills
 			throw new UnsupportedOperationException("Message not supported: " + message);
 		}
-		logger.debug("Response to Chat: {}", response);
-		return buildSynologyChatPayload(response, null);
+		logger.info("Response to Chat: {}", response);
+		String payload = buildSynologyChatPayload(response, null);
+		logger.debug("Payload to Chat: {}", payload);
+		return payload;
 	}
 
 	/**
@@ -141,25 +145,10 @@ public class BotService {
 	 * Service which reply a static string
 	 * @return the string to send to the chat
 	 */
-	private String echoService() {
+	protected String echoService() {
 		return "echo from bot service";
 	}
 
-
-	/**
-	 * Extract URL from message starting with "get"
-	 * @param message the full message
-	 * @return the extracted URL, or null if not found
-	 */
-	private String extractUrlFromMessage(String message) {
-		if (message == null || !message.startsWith("get")) {
-			return null;
-		}
-		
-		// Extract URL after "get " prefix
-		String url = message.substring(3).trim();
-		return url.isEmpty() ? null : url;
-	}
 
 	/**
 	 * Service which download a file and send its to a share drive, then send the url to the chat
@@ -167,7 +156,7 @@ public class BotService {
 	 * @param userName the user requesting the download
 	 * @return the string to send to the chat
 	 */
-	private String downloadService(String url, String userName) {
+	protected String downloadService(String url, String userName) {
 		// Validate URL
 		if (url == null || url.trim().isEmpty()) {
 			return "ERROR: No URL provided. Usage: get <url>";
@@ -178,18 +167,34 @@ public class BotService {
 			var isYoutubeUrl = url.matches("(?:https?://)?(?:www\\.)?(?:youtube\\.com|youtu\\.be).*");
 			if (isYoutubeUrl) {
 				logger.debug("YouTube URL detected: {}", url);
-				String downloadedFileUrl = downloadYoutubeVideo(url, userName);
-				if (downloadedFileUrl != null) {
-					return "Video downloaded successfully: " + downloadedFileUrl;
-				} else {
-					return "ERROR: Failed to download YouTube video";
-				}
+				// Launch download asynchronously and return immediately
+				executorService.submit(() -> downloadYoutubeVideoAsync(url, userName));
+				return "Video download started. You'll be notified when it's ready.";
 			} else {
 				return "ERROR: Only YouTube URLs are currently supported yet";
 			}
 		} catch (Exception e) {
 			logger.error("Error downloading file from {}: {}", url, e.getMessage(), e);
 			return "ERROR: " + e.getMessage();
+		}
+	}
+
+	/**
+	 * Asynchronously download a YouTube video and notify the user when complete
+	 * @param url the YouTube URL
+	 * @param userName the user requesting the download
+	 */
+	private void downloadYoutubeVideoAsync(String url, String userName) {
+		try {
+			String result = downloadYoutubeVideo(url, userName);
+			if (result != null && !result.startsWith("ERROR")) {
+				sendMessage(userName, "✅ " + result, null);
+			} else {
+				sendMessage(userName, "❌ " + (result != null ? result : "Failed to download YouTube video"), null);
+			}
+		} catch (Exception e) {
+			logger.error("Error during async YouTube download for user {}: {}", userName, e.getMessage(), e);
+			sendMessage(userName, "❌ Error: " + e.getMessage(), null);
 		}
 	}
 
