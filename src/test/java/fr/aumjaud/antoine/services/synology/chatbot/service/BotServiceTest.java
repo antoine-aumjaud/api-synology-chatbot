@@ -33,27 +33,27 @@ public class BotServiceTest {
 		String result = botService.downloadService(url, "testuser");
 
 		// Should immediately return this message, not wait for download
-		assertTrue(result.contains("Video download started"));
+		assertTrue(result.contains("Music download started"));
 		assertTrue(result.contains("You'll be notified when it's ready"));
 	}
 
 	@Test
 	public void testDownloadServiceReturnsErrorForEmptyUrl() {
 		String result = botService.downloadService("", "testuser");
-		assertTrue(result.contains("ERROR: No URL provided"));
+		assertTrue(result.contains("❌ Error: No URL provided"));
 	}
 
 	@Test
 	public void testDownloadServiceReturnsErrorForNullUrl() {
 		String result = botService.downloadService(null, "testuser");
-		assertTrue(result.contains("ERROR: No URL provided"));
+		assertTrue(result.contains("❌ Error: No URL provided"));
 	}
 
 	@Test
 	public void testDownloadServiceReturnsErrorForNonYoutubeUrl() {
 		String url = "https://www.example.com/document.pdf";
 		String result = botService.downloadService(url, "testuser");
-		assertTrue(result.contains("ERROR: Only YouTube URLs are currently supported"));
+		assertTrue(result.contains("Only YouTube URLs are currently supported yet"));
 	}
 
 	@Test
@@ -67,7 +67,7 @@ public class BotServiceTest {
 
 		for (String url : youtubeUrls) {
 			String result = botService.downloadService(url, "testuser");
-			assertTrue("URL format not detected: " + url, result.contains("Video download started"));
+			assertTrue("URL format not detected: " + url, result.contains("Music download started"));
 		}
 	}
 
@@ -97,7 +97,7 @@ public class BotServiceTest {
 		String url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 		String response = botService.receiveMessage("19", "token1", "testuser", url);
 		// Response should indicate async processing
-		assertTrue(response.contains("Video download started"));
+		assertTrue(response.contains("Music download started"));
 	}
 
 }

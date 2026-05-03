@@ -159,7 +159,7 @@ public class BotService {
 	protected String downloadService(String url, String userName) {
 		// Validate URL
 		if (url == null || url.trim().isEmpty()) {
-			return "ERROR: No URL provided. Usage: <url>";
+			return "❌ Error: No URL provided. Usage: <url>";
 		}
 
 		try {
