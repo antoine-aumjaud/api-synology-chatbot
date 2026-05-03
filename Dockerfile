@@ -23,8 +23,6 @@ RUN mkdir -p /home/app/logs /home/app/api-synology-chatbot/lib/conf \
 
 ADD --chown=app:app build/distributions/api-synology-chatbot.tar .
 
-VOLUME /home/app/api-synology-chatbot/lib/conf
-VOLUME /home/app/logs
 
 USER app
 
