@@ -159,7 +159,7 @@ public class BotService {
 	protected String downloadService(String url, String userName) {
 		// Validate URL
 		if (url == null || url.trim().isEmpty()) {
-			return "ERROR: No URL provided. Usage: get <url>";
+			return "ERROR: No URL provided. Usage: <url>";
 		}
 
 		try {
@@ -169,13 +169,13 @@ public class BotService {
 				logger.debug("YouTube URL detected: {}", url);
 				// Launch download asynchronously and return immediately
 				executorService.submit(() -> downloadYoutubeVideoAsync(url, userName));
-				return "Video download started. You'll be notified when it's ready.";
+				return "✅ Music download started. You'll be notified when it's ready.";
 			} else {
-				return "ERROR: Only YouTube URLs are currently supported yet";
+				return "❌ Only YouTube URLs are currently supported yet";
 			}
 		} catch (Exception e) {
 			logger.error("Error downloading file from {}: {}", url, e.getMessage(), e);
-			return "ERROR: " + e.getMessage();
+			return "❌ Error: " + e.getMessage();
 		}
 	}
 
@@ -234,8 +234,7 @@ public class BotService {
 			// Wait for process completion
 			int exitCode = process.waitFor();
 			if (exitCode != 0) {
-				logger.error("YouTube download failed with exit code {}. Output: {}", exitCode, output);
-				return "YouTube download failed";
+				throw new RuntimeException(String.format("YouTube download failed with exit code %d. Output: %s", exitCode, output));
 			}
 
 			// Extract filename from output to build the complete URL
@@ -243,8 +242,7 @@ public class BotService {
 			return "YouTube downloaded successfully. Check the downloaded file in your drive.";
 		} 
 		catch (Exception e) {
-			logger.error("Error during YouTube download: {}", e.getMessage(), e);
-			return "ERROR: " + e.getMessage();
+			throw new RuntimeException(String.format("Error during YouTube download: %s", e.getMessage()), e);
 		}
 	}
 
