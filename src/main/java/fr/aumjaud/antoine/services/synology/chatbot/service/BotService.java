@@ -79,7 +79,7 @@ public class BotService {
 		}
 		logger.info("Response to Chat: {}", response);
 		String payload = buildSynologyChatPayload(response, null);
-		logger.debug("Payload to Chat: {}", payload);
+		// logger.debug("Payload to Chat: {}", payload);
 		return payload;
 	}
 
@@ -110,7 +110,7 @@ public class BotService {
 		String payload = "payload=" + buildSynologyChatPayload(message, url); //not a json message
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
-			logger.debug("Message '{}' sent to user '{}', response: {}", message, userName, httpResponse);
+			// logger.debug("Message '{}' sent to user '{}', response: {}", message, userName, httpResponse);
 			String content = httpResponse.getContent();
 			boolean res = httpResponse.getHttpCode() == HttpCode.OK && !content.contains("error");
 			if(!res) logger.error("Payload '{}' NOT sent to user {}, response: {}", payload, userName, content);
