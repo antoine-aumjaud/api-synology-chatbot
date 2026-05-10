@@ -1,12 +1,13 @@
-FROM docker.io/eclipse-temurin:25-jre
+FROM docker.io/eclipse-temurin:25-jre-alpine
+
+ARG APP_UID=1000
+ARG APP_GID=1000
 
 LABEL maintainer "Antoine Aumjaud <antoine_dev@aumjaud.fr>"
 
 EXPOSE 9080
 
-RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates curl tar \
- && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache ca-certificates curl tar
 
 RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.5.1.tgz -o /tmp/docker.tgz \
  && tar -xzf /tmp/docker.tgz -C /tmp \
@@ -14,16 +15,14 @@ RUN curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-27.
  && chmod +x /usr/local/bin/docker \
  && rm -rf /tmp/docker /tmp/docker.tgz 
  
-RUN groupadd --system app \
- && useradd --system --gid app --create-home --home-dir /home/app app
-
-WORKDIR /home/app
-RUN mkdir -p /home/app/logs /home/app/api-synology-chatbot/lib/conf \
- && chown -R app:app /home/app
-
-ADD --chown=app:app build/distributions/api-synology-chatbot.tar .
-
+RUN addgroup -g ${APP_GID} app \
+ && adduser -D -u ${APP_UID} -G app -h /home/app -s /bin/sh app
 
 USER app
+WORKDIR /home/app
+
+RUN mkdir -p /home/app/logs /home/app/api-synology-chatbot/lib/conf 
+
+ADD --chown=app:app build/distributions/api-synology-chatbot.tar .
 
 CMD ["./api-synology-chatbot/bin/api-synology-chatbot"]
