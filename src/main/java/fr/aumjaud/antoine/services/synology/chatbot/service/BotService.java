@@ -74,8 +74,8 @@ public class BotService {
 			response = downloadService(message, userName);
 		} 
 		else {
+			response = "no more supported message for now, stay tuned for more features!"; 
 			// TODO call AI with skills
-			throw new UnsupportedOperationException("Message not supported: " + message);
 		}
 		logger.info("Response to Chat: {}", response);
 		String payload = buildSynologyChatPayload(response, null);
@@ -110,7 +110,7 @@ public class BotService {
 		String payload = "payload=" + buildSynologyChatPayload(message, url); //not a json message
 		HttpResponse httpResponse = httpHelper.postData(targetUrl, payload);
 		if (httpResponse != null) {
-			logger.debug("Message '{}' sent to user {}, response: {}", message, userName, httpResponse);
+			logger.debug("Message '{}' sent to user '{}', response: {}", message, userName, httpResponse);
 			String content = httpResponse.getContent();
 			boolean res = httpResponse.getHttpCode() == HttpCode.OK && !content.contains("error");
 			if(!res) logger.error("Payload '{}' NOT sent to user {}, response: {}", payload, userName, content);
@@ -132,8 +132,8 @@ public class BotService {
 	 * @return the payload
 	 */
 	private String buildSynologyChatPayload(String message, String url) {
-		if (message != null) message = message.replace("\n", "\\n");
-		
+		if (message != null) message = message.replace("\n", "\\n").replace("\"", "\\\"");
+
 		List<String> payload = new ArrayList<>(); 
 		if(message != null) payload.add(String.format("\"text\": \"%s\"", message));
 		if(url != null)     payload.add(String.format("\"file_url\": \"%s\"", url));
@@ -217,7 +217,7 @@ public class BotService {
 			logger.info("Executing command: {}", cmd);
 
 			// Execute the docker command
-			ProcessBuilder pb = new ProcessBuilder("bash", "-c", cmd);
+			ProcessBuilder pb = new ProcessBuilder("sh", "-c", cmd);
 			pb.redirectErrorStream(true);
 			Process process = pb.start();
 
